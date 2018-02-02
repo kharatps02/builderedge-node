@@ -53,7 +53,7 @@ export class ProjectController {
                 // Get project details from salesforce 
                 request(Constants.API_END_POINTS.GET_PROJECT_AND_TASK_DETAILS, requestHeader, (error, response) => {
 
-                    if (!error && response.statusCode === 401) {
+                    if (!error) {
                         if (response.statusCode === 401) {
                             res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: '', results: response.body[0].message })
                         } else {
