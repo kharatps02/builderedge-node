@@ -35,7 +35,7 @@ export class ProjectController {
     getalldetails(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             console.log(req.body);
-            console.log(req.params);
+            console.log(req);
             if (req.body.session_id) {
                 let reqParams: IProjectRequest = {
                     name: req.body.name,
