@@ -38,11 +38,11 @@ export class Server {
 
     //configure application
     this.config();
-    
+
     //add routes
     this.routes();
   }
- 
+
   /**
    * Configure application
    *
@@ -57,7 +57,13 @@ export class Server {
     this.app.set("views", path.join(__dirname, "views"));
     this.app.engine('html', require('ejs').renderFile);
     this.app.set("view engine", "html");
- 
+
+    this.app.use(function (req, res, next) {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+      res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization');
+      next();
+    });
     //mount logger
     this.app.use(logger("dev"));
 
@@ -68,7 +74,7 @@ export class Server {
     this.app.use(bodyParser.urlencoded({
       extended: true
     }));
- 
+
     // catch 404 and forward to error handler
     this.app.use(function (err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
       err.status = 404;
