@@ -1,0 +1,33 @@
+{
+  "name": "builderedge",
+  "description": "builderedge poc",
+  "version": "1.0.0",
+  "private": true,
+  "author": "",
+  "scripts": {
+    "grunt": "grunt",
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "@types/body-parser": "1.16.8",
+    "@types/errorhandler": "0.0.32",
+    "@types/method-override": "0.0.31",
+    "@types/morgan": "^1.7.35",
+    "@types/pg": "^7.4.1",
+    "body-parser": "^1.18.2",
+    "ejs": "^2.5.7",
+    "errorhandler": "^1.5.0",
+    "express": "^4.16.2",
+    "grunt": "^1.0.1",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-ts": "^6.0.0-beta.17",
+    "morgan": "^1.9.0",
+    "nodemon": "^1.12.1",
+    "pg": "7.4.1",
+    "typescript": "^2.6.1"
+  },
+  "devDependencies": {
+    "typescript": "^2.7.1"
+  }
+}
