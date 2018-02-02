@@ -3,7 +3,7 @@ import { Constants } from '../../config/constants';
 import { error } from 'util';
 
 
-export class ProjectModel {    
+export class ProjectModel {
     constructor() {
 
     }
@@ -37,6 +37,7 @@ export class ProjectModel {
 }
 
 
+
 export interface IProjectRequest {
     name: string;
     start_date: Date;
@@ -45,3 +46,23 @@ export interface IProjectRequest {
     created_by: string;
     updated_by: string;
 }
+export interface IProjectDetails {
+    id?: string;
+    external_id?: string;
+    name: string;
+    start: Date;
+    end: Date;
+    completion_per?: number;
+    description?: string;
+    status?: string;
+    is_syc?: boolean;
+    created_by: string;
+    updated_by: string;
+    created_at: Date;
+    updated_at: Date;
+    records?: Array<ITaskDetails>;
+};
+
+export interface ITaskDetails extends IProjectDetails {
+    project_ref_id: string;
+};
