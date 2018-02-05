@@ -2,7 +2,7 @@ import * as express from "express";
 import * as request from 'request';
 
 import { ProjectModel, IProjectRequest, IProjectDetails, ITaskDetails } from './project.model';
-import { formatProjectDetails, buildProjectStatement, buildProjectTasksStatement } from './project.helper';
+import { formatProjectDetails, buildProjectStatement, buildProjectTasksStatement, formatSalesForceObject } from './project.helper';
 import { Constants } from '../../config/constants';
 import { error } from "util";
 
@@ -55,7 +55,7 @@ export class ProjectController {
 
                     if (!error) {
                         if (response.statusCode === 401) {
-                            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: '', results: response.body[0].message })
+                            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: '401', results: response.body[0].message })
                         } else {
                             if (response.body && response.body.length > 0) {
                                 let projectArray: Array<IProjectDetails> = response.body;
@@ -63,7 +63,7 @@ export class ProjectController {
                                     projectArray = JSON.parse(response.body);
                                 }
                                 let projects = formatProjectDetails(projectArray);
-                                that.syncUserDetails.call(that, projects);
+                                that.syncUserDetails.call(that, req.body.session_id, projects);
                                 res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '', projects: projects });
 
                             }
@@ -105,11 +105,21 @@ export class ProjectController {
                     project_ref_id: req.body.project_ref_id,
                     id: req.body.id,
                 };
-
-                this.projectModel.updateProjectOrTask(updatParams, isProjectRequest, (error, result) => {
+                let that = this;
+                that.projectModel.updateProjectOrTask(updatParams, isProjectRequest, (error, result) => {
                     if (!error) {
                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: 'Updated data successfully.' });
-                      //  this.updateOnSalesforce(req, res, updatParams)
+
+                        let requestData = { ProjectTasks: [], Projects: [] };
+                        if (isProjectRequest) {
+                            requestData.Projects.push(formatSalesForceObject(updatParams))
+                        } else {
+                            requestData.ProjectTasks.push(formatSalesForceObject(updatParams))
+                        }
+                        let requestData1 = {
+                            Data__c: JSON.stringify(requestData)
+                        }
+                        that.updateOnSalesforce(req.body.session_id, requestData);
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
                     }
@@ -123,63 +133,81 @@ export class ProjectController {
         }
     }
 
-    updateOnSalesforce(req: express.Request, res: express.Response, updatParams) {
-        let requestHeader = {
+    updateOnSalesforce(sessionId, requestData) {
+        let requestObj = {
+            url: Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS,
             headers: {
-                'Authorization' : 'Bearer ' + req.body.session_id,
+                'Authorization' : 'Bearer ' + sessionId,
                 'Content-Type': 'application/json'
             },
-            body: updatParams
+            json: true,
+            body: requestData
         };
-        request(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, requestHeader, (error, response) => {
+        console.log(requestObj);
+        request.post(requestObj, (error, response) => {
             if (!error) {
                 if (response.statusCode === 401) {
-                    res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: '', results: response.body[0].message })
                 } else {
                     if (response.body && response.body.length > 0) {
-                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '' });
                     }
                 }
-            } else {
-                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error })
             }
+            console.log(error);
+            console.log(response.body);
         });
     }
 
-    syncUserDetails(projects) {
+    syncUserDetails(sessionId: string, salesforceResponseArray) {
         let that = this;
-        let queryConfig = buildProjectStatement(projects, ['_id', 'external_id']);
-        console.log(queryConfig);
+        let queryConfig = buildProjectStatement(salesforceResponseArray, ['_id', 'external_id']);
         that.projectModel.execMultipleStatment(queryConfig, (error, result) => {
             if (!error) {
                 console.log('In execMultipleStatment result>>', result);
 
-                // update external id at salesfore side 
-                let pksExternalPksMap = {};
+                let salesforceRequestObj = { ProjectTasks: [], Projects: [] };
+                let pksExternalPksMap = {}, taskRecords = [];
                 result.rows.forEach((row) => {
                     pksExternalPksMap[row.external_id] = row._id;
+                    salesforceRequestObj.Projects.push({ Id: row.external_id, External_Id__c: row._id });
                 });
-                let tasks = [];
-                projects.forEach(element => {
-                    let projectId = pksExternalPksMap[element['id']] || element['external_id'];
-                    if (element.series && element.series.length > 0 && projectId) {
-                        element.series.forEach((task) => {
-                            task['project_ref_id'] = projectId;
-                            tasks.push(task);
+
+                salesforceResponseArray.forEach(projectRecord => {
+                    let projectId = pksExternalPksMap[projectRecord['id']] || projectRecord['external_id'];
+                    if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
+                        projectRecord.series.forEach((taskRecord) => {
+                            taskRecord['project_ref_id'] = projectId;
+                            taskRecords.push(taskRecord);
                         });
                     }
                 });
 
-                if (tasks && tasks.length) {
-                    let tasksQueryConfig = buildProjectTasksStatement(tasks, ['_id', 'external_id']);
+                if (taskRecords && taskRecords.length) {
+                    let tasksQueryConfig = buildProjectTasksStatement(taskRecords, ['_id', 'external_id']);
                     console.log(tasksQueryConfig);
-                    that.projectModel.execMultipleStatment(tasksQueryConfig, (error, result) => {
+                    that.projectModel.execMultipleStatment(tasksQueryConfig, (error, result1) => {
                         if (!error) {
-                            console.log('In execMultipleStatment task result>>', result);
+                            console.log('In execMultipleStatment task result>>', result1);
+                            result1.rows.forEach((row) => {
+                                salesforceRequestObj.ProjectTasks.push({ Id: row.external_id, External_Id__c: row._id });
+                            });
                         } else {
                             console.log('In execMultipleStatment task error>>', error);
                         }
+                        if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0 ||
+                            salesforceRequestObj.ProjectTasks && salesforceRequestObj.ProjectTasks.length > 0) {
+                            let requestData = {
+                                Data__c: JSON.stringify(salesforceRequestObj)
+                            }
+                            that.updateOnSalesforce(sessionId, requestData);
+                        }
                     });
+                } else {
+                    if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0) {
+                        let requestData = {
+                            Data__c: JSON.stringify(salesforceRequestObj)
+                        };
+                        that.updateOnSalesforce(sessionId, requestData);
+                    }
                 }
             } else {
                 console.log('In execMultipleStatment error>>', error);

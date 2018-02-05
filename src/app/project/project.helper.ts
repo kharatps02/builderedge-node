@@ -35,7 +35,7 @@ export function formatProjectDetails(projectArray) {
                 newTask['created_at'] = task['CreatedDate'];
                 newTask['updated_at'] = task['LastModifiedDate'];
                 newTask['external_id'] = task['External_Id__c'];
-                newTask['project_ref_id'] = project['Id'];
+                newTask['project_ref_id'] = task['Project__c'];
                 newProject.series.push(newTask);
             });
         }
@@ -165,3 +165,41 @@ export function buildProjectStatement(rows, returnFieldArr = []) {
         values: params
     }
 }
+
+export function formatSalesForceObject(params) {
+
+    let record = {};
+
+    if (params.name) {
+        record['Name'] = params.name;
+    }
+    if (params.description) {
+        record['Description__c'] = params.description;
+    }
+    if (params.start_date) {
+        record['Start_Date__c'] = params.start_date;
+    }
+    if (params.end_date) {
+        record['End_Date__c'] = params.end_date;
+    }
+    if (params.completion_per) {
+        record['Completion_Percentage__c'] = params.completion_per;
+    }
+    if (params.status) {
+        record['Status__c'] = params.status;
+    }
+
+    if (params.id) {
+        record['External_Id__c'] = params.id;
+    }
+
+    if (params.external_id) {
+        record['Id'] = params.external_id;
+    }
+
+    if (params.project_ref_id) {
+        record['Project__c'] = params.project_ref_id;
+    }
+    return record;
+}
+
