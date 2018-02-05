@@ -13,7 +13,8 @@ export class ProjectRoutes {
     get routes() {
         let router = express.Router();
         router.post('/api/project/create', this.authentication.ensureAuthorized, this.projectController.create.bind(this.projectController));
-        router.post('/api/project/update', this.authentication.ensureAuthorized, this.projectController.update.bind(this.projectController));
+        router.post('/api/project/update', this.authentication.ensureAuthorized, this.projectController.updateProject.bind(this.projectController));
+        router.post('/api/task/update', this.authentication.ensureAuthorized, this.projectController.updateTask.bind(this.projectController));
         router.post('/api/project/findbyid', this.authentication.ensureAuthorized, this.projectController.getalldetails.bind(this.projectController));
         router.post('/api/project/getalldetails', this.authentication.ensureAuthorized, this.projectController.getalldetails.bind(this.projectController));
         return router;

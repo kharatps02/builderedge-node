@@ -81,7 +81,15 @@ export class ProjectController {
         }
     }
 
-    update(req: express.Request, res: express.Response, next: express.NextFunction) {
+    updateProject(req: express.Request, res: express.Response, next: express.NextFunction) {
+        this.updateProjectOrTask(req, res, true)
+    }
+
+    updateTask(req: express.Request, res: express.Response, next: express.NextFunction) {
+        this.updateProjectOrTask(req, res, false)
+    }
+
+    updateProjectOrTask(req: express.Request, res: express.Response, isProjectRequest: boolean) {
         try {
             console.log(req.body);
             if (req.body.session_id) {
@@ -91,17 +99,17 @@ export class ProjectController {
                     end_date: req.body.end_date,
                     completion_per: req.body.completion_per,
                     created_by: req.body.created_by,
-                    updated_by: req.body.created_by,
+                    updated_by: req.body.updated_by,
                     status: req.body.status,
                     external_id: req.body.external_id,
                     project_ref_id: req.body.project_ref_id,
                     id: req.body.id,
                 };
 
-                this.projectModel.update(updatParams, (error, result) => {
+                this.projectModel.updateProjectOrTask(updatParams, isProjectRequest, (error, result) => {
                     if (!error) {
                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: 'Updated data successfully.' });
-                        this.updateOnSalesforce(req, res, updatParams)
+                      //  this.updateOnSalesforce(req, res, updatParams)
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
                     }
