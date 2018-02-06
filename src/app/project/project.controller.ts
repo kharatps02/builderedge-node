@@ -90,16 +90,16 @@ export class ProjectController {
             if (sessionId) {
                 let that = this;
                 let asyncTasks = [];
-                let projectTasks = req.body.tasks;
+                let records = req.body.records;
 
-                that.projectModel.updateProjectsOrTasks(projectTasks, isProjectRequest, (error, results) => {
+                that.projectModel.updateProjectsOrTasks(records, isProjectRequest, (error, results) => {
                     console.log(error, results);
                     if (!error) {
                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
 
                         // Update salesforce data
                         if (results && results.length > 0) {
-                            that.updateSalesforceDB.call(that, sessionId, projectTasks, isProjectRequest);
+                            that.updateSalesforceDB.call(that, sessionId, records, isProjectRequest);
                         }
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
