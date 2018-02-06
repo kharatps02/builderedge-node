@@ -7,18 +7,19 @@ import { error } from 'util';
 export class ProjectModel {
     private pgClient: Client
     constructor() {
-        this.pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
-        this.pgClient.connect();
+        // this.pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
+        // this.pgClient.connect();
     }
 
     create(params: IProjectRequest, callback: (error: Error, results: any) => void) {
-        let pgClienet = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
+        let pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
+        pgClient.connect();
         let addQueryString = 'INSERT INTO PROJECT(name, start_date, end_date, completion_per, created_by, updated_by) VALUES ($1,$2,$3,$4,$5,$6)';
         let addQueryValues = [params.name, params.start_date, params.end_date, params.completion_per, params.created_by, params.updated_by];
-        this.pgClient.query(addQueryString, addQueryValues, (err, results) => {
+        pgClient.query(addQueryString, addQueryValues, (err, results) => {
             callback(err, results);
         });
-    } 
+    }
 
     updateProjectOrTask(params: any, isProject = true, callback: (error: Error, results: any) => void) {
         let queryValues = [];
@@ -63,14 +64,18 @@ export class ProjectModel {
         }
         updateQueryString += '  SET ' + valueClause.join(', ') + ' WHERE _id=$' + (valueClause.length + 1);
         console.log('updateQueryString', updateQueryString, queryValues);
-        this.pgClient.query(updateQueryString, queryValues, (err, results) => {
+        let pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
+        pgClient.connect();
+        pgClient.query(updateQueryString, queryValues, (err, results) => {
             console.log(err, results)
             callback(err, results);
         });
     }
 
     execMultipleStatment(queryObj: { text: string, values: Array<any> }, callback: (error: Error, results: any) => void) {
-        this.pgClient.query(queryObj, (err, results) => {
+        let pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
+        pgClient.connect();
+        pgClient.query(queryObj, (err, results) => {
             callback(err, results);
         });
     }
