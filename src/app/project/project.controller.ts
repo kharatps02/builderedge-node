@@ -58,7 +58,8 @@ export class ProjectController {
                                     projectArray = JSON.parse(response.body);
                                 }
                                 let projects = formatProjectDetails(projectArray);
-                                that.syncUserDetails.call(that, req.body.session_id, projects);
+
+                                that.syncSalesforceUserDetails.call(that, req.body.session_id, projects);
                                 res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '', projects: projects });
                             }
                         }
@@ -99,7 +100,7 @@ export class ProjectController {
 
                         // Update salesforce data
                         if (results && results.length > 0) {
-                            that.updateSalesforceDB.call(that, sessionId, records, isProjectRequest);
+                            that.preparedRequestAndUpdateSalesforceDB.call(that, sessionId, records, isProjectRequest);
                         }
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
@@ -115,7 +116,7 @@ export class ProjectController {
     }
 
 
-    updateSalesforceDB(sessionId: string, results, isProjectRequest) {
+    preparedRequestAndUpdateSalesforceDB(sessionId: string, results, isProjectRequest) {
         let data = { ProjectTasks: [], Projects: [] };
         if (isProjectRequest) {
             results.forEach((row) => {
@@ -132,6 +133,7 @@ export class ProjectController {
         this.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, sessionId, requestData);
     }
 
+    // Following function sent post request on salesforce endpoints
     postRequestOnSalesforce(url: string, sessionId: string, data, callback?: (error: Error, results: any) => void) {
         let requestObj = {
             url: url,
@@ -151,27 +153,31 @@ export class ProjectController {
         });
     }
 
-    syncUserDetails(sessionId: string, salesforceResponseArray) {
+    // Following function  insert all project and tasks into postgres database and
+    //  call salesforce endpoints to updates salesforce record external_id with postgres record id 
+    syncSalesforceUserDetails(sessionId: string, salesforceResponseArray) {
         let that = this;
-
         try {
             let projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
+
+            // Filter newly added projects, those records which hasn't external_id
             projectRecords = projectRecords.filter((self) => {
                 if (!self['external_id']) {
                     return true;
                 }
             });
-            // console.log(projectRecords);
+
             if (projectRecords && projectRecords.length > 0) {
                 let queryConfig = buildInsertStatements(projectRecords, ['_id', 'external_id'], true);
-                // console.log(queryConfig);
-                that.projectModel.insertManyStatements(queryConfig, (error, result) => {
+                // Insert Projects records
+                that.projectModel.insertManyStatements(queryConfig, (error, projectResult) => {
                     if (!error) {
-                        console.log('In execMultipleStatment result>>', result);
-
+                        // console.log('In execMultipleStatment projectResult>>', projectResult);
                         let salesforceRequestObj = { ProjectTasks: [], Projects: [] };
                         let pksExternalPksMap = {}, taskRecords = [];
-                        result.rows.forEach((row) => {
+
+                        // Prepared  object to update postgres id into salesforce databse
+                        projectResult.rows.forEach((row) => {
                             pksExternalPksMap[row.external_id] = row._id;
                             salesforceRequestObj.Projects.push({ Id: row.external_id, External_Id__c: row._id });
                         });
@@ -188,16 +194,19 @@ export class ProjectController {
 
                         if (taskRecords && taskRecords.length) {
                             let tasksQueryConfig = buildInsertStatements(taskRecords, ['_id', 'external_id'], false);
-                            console.log(tasksQueryConfig);
-                            that.projectModel.insertManyStatements(tasksQueryConfig, (error, result1) => {
+                            that.projectModel.insertManyStatements(tasksQueryConfig, (error, taskResult) => {
                                 if (!error) {
-                                    console.log('In execMultipleStatment task result>>', result1);
-                                    result1.rows.forEach((row) => {
+                                    // console.log('In execMultipleStatment task taskResult>>', taskResult);
+
+                                    // Prepared  object to update postgres id into salesforce databse
+                                    taskResult.rows.forEach((row) => {
                                         salesforceRequestObj.ProjectTasks.push({ Id: row.external_id, External_Id__c: row._id });
                                     });
                                 } else {
                                     console.log('In execMultipleStatment task error>>', error);
                                 }
+
+                                // call salesforce endpoints to update postgres id into salesforce databse
                                 if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0 ||
                                     salesforceRequestObj.ProjectTasks && salesforceRequestObj.ProjectTasks.length > 0) {
                                     let requestData = {
@@ -207,6 +216,7 @@ export class ProjectController {
                                 }
                             });
                         } else {
+                            // call salesforce endpoints to update postgres id into salesforce databse
                             if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0) {
                                 let requestData = {
                                     Data__c: JSON.stringify(salesforceRequestObj)
