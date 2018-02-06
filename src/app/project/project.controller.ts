@@ -147,75 +147,77 @@ export class ProjectController {
 
     syncUserDetails(sessionId: string, salesforceResponseArray) {
         let that = this;
-        // let projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
-        // projectRecords = projectRecords.filter((self) => {
-        //     if (!self['external_id']) {
-        //         return true;
-        //     }
-        // });
-        // console.log(projectRecords);
-        // if (projectRecords && projectRecords.length > 0) {
+
         try {
-            let queryConfig = buildInsertStatements(salesforceResponseArray, ['_id', 'external_id'], true);
-            console.log(queryConfig);
-            that.projectModel.execMultipleStatment(queryConfig, (error, result) => {
-                if (!error) {
-                    console.log('In execMultipleStatment result>>', result);
-
-                    let salesforceRequestObj = { ProjectTasks: [], Projects: [] };
-                    let pksExternalPksMap = {}, taskRecords = [];
-                    result.rows.forEach((row) => {
-                        pksExternalPksMap[row.external_id] = row._id;
-                        salesforceRequestObj.Projects.push({ Id: row.external_id, External_Id__c: row._id });
-                    });
-
-                    salesforceResponseArray.forEach(projectRecord => {
-                        let projectId = pksExternalPksMap[projectRecord['id']] || projectRecord['external_id'];
-                        if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
-                            projectRecord.series.forEach((taskRecord) => {
-                                taskRecord['project_ref_id'] = projectId;
-                                taskRecords.push(taskRecord);
-                            });
-                        }
-                    });
-
-                    if (taskRecords && taskRecords.length) {
-                        let tasksQueryConfig = buildInsertStatements(taskRecords, ['_id', 'external_id'], false);
-                        console.log(tasksQueryConfig);
-                        that.projectModel.execMultipleStatment(tasksQueryConfig, (error, result1) => {
-                            if (!error) {
-                                console.log('In execMultipleStatment task result>>', result1);
-                                result1.rows.forEach((row) => {
-                                    salesforceRequestObj.ProjectTasks.push({ Id: row.external_id, External_Id__c: row._id });
-                                });
-                            } else {
-                                console.log('In execMultipleStatment task error>>', error);
-                            }
-                            if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0 ||
-                                salesforceRequestObj.ProjectTasks && salesforceRequestObj.ProjectTasks.length > 0) {
-                                let requestData = {
-                                    Data__c: JSON.stringify(salesforceRequestObj)
-                                }
-                                that.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, sessionId, requestData);
-                            }
-                        });
-                    } else {
-                        if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0) {
-                            let requestData = {
-                                Data__c: JSON.stringify(salesforceRequestObj)
-                            };
-                            that.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, sessionId, requestData);
-                        }
-                    }
-                } else {
-                    console.log('In execMultipleStatment error>>', error);
+            let projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
+            projectRecords = projectRecords.filter((self) => {
+                if (!self['external_id']) {
+                    return true;
                 }
             });
+            console.log(projectRecords);
+            if (projectRecords && projectRecords.length > 0) {
+                let queryConfig = buildInsertStatements(salesforceResponseArray, ['_id', 'external_id'], true);
+                console.log(queryConfig);
+                that.projectModel.execMultipleStatment(queryConfig, (error, result) => {
+                    if (!error) {
+                        console.log('In execMultipleStatment result>>', result);
+
+                        let salesforceRequestObj = { ProjectTasks: [], Projects: [] };
+                        let pksExternalPksMap = {}, taskRecords = [];
+                        result.rows.forEach((row) => {
+                            pksExternalPksMap[row.external_id] = row._id;
+                            salesforceRequestObj.Projects.push({ Id: row.external_id, External_Id__c: row._id });
+                        });
+
+                        salesforceResponseArray.forEach(projectRecord => {
+                            let projectId = pksExternalPksMap[projectRecord['id']] || projectRecord['external_id'];
+                            if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
+                                projectRecord.series.forEach((taskRecord) => {
+                                    taskRecord['project_ref_id'] = projectId;
+                                    taskRecords.push(taskRecord);
+                                });
+                            }
+                        });
+
+                        if (taskRecords && taskRecords.length) {
+                            let tasksQueryConfig = buildInsertStatements(taskRecords, ['_id', 'external_id'], false);
+                            console.log(tasksQueryConfig);
+                            that.projectModel.execMultipleStatment(tasksQueryConfig, (error, result1) => {
+                                if (!error) {
+                                    console.log('In execMultipleStatment task result>>', result1);
+                                    result1.rows.forEach((row) => {
+                                        salesforceRequestObj.ProjectTasks.push({ Id: row.external_id, External_Id__c: row._id });
+                                    });
+                                } else {
+                                    console.log('In execMultipleStatment task error>>', error);
+                                }
+                                if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0 ||
+                                    salesforceRequestObj.ProjectTasks && salesforceRequestObj.ProjectTasks.length > 0) {
+                                    let requestData = {
+                                        Data__c: JSON.stringify(salesforceRequestObj)
+                                    }
+                                    that.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, sessionId, requestData);
+                                }
+                            });
+                        } else {
+                            if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0) {
+                                let requestData = {
+                                    Data__c: JSON.stringify(salesforceRequestObj)
+                                };
+                                that.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, sessionId, requestData);
+                            }
+                        }
+                    } else {
+                        console.log('In execMultipleStatment error>>', error);
+                    }
+                });
+            } else {
+                console.log('Nothing to sync..');
+            }
         } catch (e) {
             console.log(e);
         }
-        // } else {
-        //     console.log('Nothing to sync..');
-        // }
+
     }
 }
