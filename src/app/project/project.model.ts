@@ -1,81 +1,52 @@
 import { Client } from 'pg';
-import { Constants } from '../../config/constants';
 import { error } from 'util';
+import * as async from 'async';
 
-
+import { Constants } from '../../config/constants';
+import { buildUpdateStatements } from './project.helper';
+// import *  as pg from 'pg';
 
 export class ProjectModel {
     private pgClient: Client
     constructor() {
-        // this.pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
-        // this.pgClient.connect();
+
     }
 
     create(params: IProjectRequest, callback: (error: Error, results: any) => void) {
-        let pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
+        let pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         let addQueryString = 'INSERT INTO PROJECT(name, start_date, end_date, completion_per, created_by, updated_by) VALUES ($1,$2,$3,$4,$5,$6)';
         let addQueryValues = [params.name, params.start_date, params.end_date, params.completion_per, params.created_by, params.updated_by];
         pgClient.query(addQueryString, addQueryValues, (err, results) => {
             callback(err, results);
+            pgClient.end();
         });
     }
 
-    updateProjectOrTask(params: any, isProject = true, callback: (error: Error, results: any) => void) {
-        let queryValues = [];
-        const valueClause = [];
-
-        if (params.name) {
-            queryValues.push(params.name);
-            valueClause.push(' name= $' + queryValues.length);
-        }
-        if (params.start_date) {
-            queryValues.push(params.start_date);
-            valueClause.push(' start_date= $' + queryValues.length);
-        }
-        if (params.end_date) {
-            queryValues.push(params.end_date);
-            valueClause.push(' end_date= $' + queryValues.length);
-        }
-        if (params.completion_per) {
-            queryValues.push(params.completion_per);
-            valueClause.push(' completion_per= $' + queryValues.length);
-        }
-
-        if (params.description) {
-            queryValues.push(params.description);
-            valueClause.push(' description= $' + queryValues.length);
-        }
-
-        if (params.status) {
-            queryValues.push(params.status);
-            valueClause.push(' status= $' + queryValues.length);
-        }
-
-        if (params.updated_by) {
-            queryValues.push(params.updated_by);
-            valueClause.push(' updated_by= $' + queryValues.length);
-        }
-
-        queryValues.push(params.id);
-        let updateQueryString = 'UPDATE PROJECTS';
-        if (!isProject) {
-            updateQueryString = 'UPDATE PROJECT_TASKS';
-        }
-        updateQueryString += '  SET ' + valueClause.join(', ') + ' WHERE _id=$' + (valueClause.length + 1);
-        console.log('updateQueryString', updateQueryString, queryValues);
-        let pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
+    updateProjectsOrTasks(projectTasks: Array<any>, isProject = true, callback: (error: Error, results: any) => void) {
+        let asyncTasks = [];
+        let pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        pgClient.query(updateQueryString, queryValues, (err, results) => {
-            console.log(err, results)
-            callback(err, results);
+
+        projectTasks.forEach((task) => {
+            asyncTasks.push(function (callback) {
+                let queryConfig = buildUpdateStatements(task, isProject);
+                console.log(queryConfig);
+                pgClient.query(queryConfig, callback);
+            });
+        });
+        async.parallel(asyncTasks, (error, results) => {
+            pgClient.end();
+            callback(error, results);
         });
     }
 
-    execMultipleStatment(queryObj: { text: string, values: Array<any> }, callback: (error: Error, results: any) => void) {
-        let pgClient = new Client({ connectionString: Constants.DB_CONNECTION_STRING, ssl: true });
+
+    insertManyStatements(queryObj: { text: string, values: Array<any> }, callback: (error: Error, results: any) => void) {
+        let pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         pgClient.query(queryObj, (err, results) => {
+            pgClient.end();
             callback(err, results);
         });
     }

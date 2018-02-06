@@ -147,3 +147,53 @@ export function formatSalesForceObject(params) {
     return record;
 }
 
+
+export function buildUpdateStatements(params, isProject): { text: string, values: Array<any> } {
+    let queryValues = [];
+    const valueClause = [];
+
+    if (params.name) {
+        queryValues.push(params.name);
+        valueClause.push(' name= $' + queryValues.length);
+    }
+    if (params.start_date) {
+        queryValues.push(params.start_date);
+        valueClause.push(' start_date= $' + queryValues.length);
+    }
+    if (params.end_date) {
+        queryValues.push(params.end_date);
+        valueClause.push(' end_date= $' + queryValues.length);
+    }
+    if (params.completion_per) {
+        queryValues.push(params.completion_per);
+        valueClause.push(' completion_per= $' + queryValues.length);
+    }
+
+    if (params.description) {
+        queryValues.push(params.description);
+        valueClause.push(' description= $' + queryValues.length);
+    }
+
+    if (params.status) {
+        queryValues.push(params.status);
+        valueClause.push(' status= $' + queryValues.length);
+    }
+
+    if (params.updated_by) {
+        queryValues.push(params.updated_by);
+        valueClause.push(' updated_by= $' + queryValues.length);
+    }
+
+    queryValues.push(params.id);
+    let updateQueryString = 'UPDATE PROJECTS';
+    if (!isProject) {
+        updateQueryString = 'UPDATE PROJECT_TASKS';
+    }
+    updateQueryString += '  SET ' + valueClause.join(', ') + ' WHERE _id=$' + (valueClause.length + 1);
+    // console.log('updateQueryString', updateQueryString, queryValues);
+    return {
+        text: updateQueryString,
+        values: queryValues
+    };
+}
+

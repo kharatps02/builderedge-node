@@ -1,5 +1,6 @@
 import * as express from "express";
 import * as request from 'request';
+import * as async from 'async';
 
 import { ProjectModel, IProjectRequest, IProjectDetails, ITaskDetails } from './project.model';
 import { formatProjectDetails, buildInsertStatements, formatSalesForceObject } from './project.helper';
@@ -85,34 +86,21 @@ export class ProjectController {
 
     updateProjectOrTask(req: express.Request, res: express.Response, isProjectRequest: boolean) {
         try {
-            if (req.body.session_id) {
-                let updatParams: IProjectDetails = {
-                    name: req.body.name,
-                    start_date: req.body.start_date,
-                    end_date: req.body.end_date,
-                    completion_per: req.body.completion_per,
-                    created_by: req.body.created_by,
-                    updated_by: req.body.updated_by,
-                    status: req.body.status,
-                    external_id: req.body.external_id,
-                    project_ref_id: req.body.project_ref_id,
-                    id: req.body.id,
-                };
+            let sessionId = req.body.session_id;
+            if (sessionId) {
                 let that = this;
-                that.projectModel.updateProjectOrTask(updatParams, isProjectRequest, (error, result) => {
+                let asyncTasks = [];
+                let projectTasks = req.body.tasks;
+
+                that.projectModel.updateProjectsOrTasks(projectTasks, isProjectRequest, (error, results) => {
+                    console.log(error, results);
                     if (!error) {
                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
 
-                        let requestData = { ProjectTasks: [], Projects: [] };
-                        if (isProjectRequest) {
-                            requestData.Projects.push(formatSalesForceObject(updatParams))
-                        } else {
-                            requestData.ProjectTasks.push(formatSalesForceObject(updatParams))
+                        // Update salesforce data
+                        if (results && results.length > 0) {
+                            that.updateSalesforceDB.call(that, sessionId, projectTasks, isProjectRequest);
                         }
-                        let requestData1 = {
-                            Data__c: JSON.stringify(requestData)
-                        }
-                        that.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, req.body.session_id, requestData1);
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
                     }
@@ -124,6 +112,24 @@ export class ProjectController {
         catch (error) {
             res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
+    }
+
+
+    updateSalesforceDB(sessionId: string, results, isProjectRequest) {
+        let data = { ProjectTasks: [], Projects: [] };
+        if (isProjectRequest) {
+            results.forEach((row) => {
+                data.Projects.push(formatSalesForceObject(row))
+            });
+        } else {
+            results.forEach((row) => {
+                data.ProjectTasks.push(formatSalesForceObject(row))
+            });
+        }
+        let requestData = {
+            Data__c: JSON.stringify(data)
+        };
+        this.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, sessionId, requestData);
     }
 
     postRequestOnSalesforce(url: string, sessionId: string, data, callback?: (error: Error, results: any) => void) {
@@ -155,11 +161,11 @@ export class ProjectController {
                     return true;
                 }
             });
-            console.log(projectRecords);
+            // console.log(projectRecords);
             if (projectRecords && projectRecords.length > 0) {
-                let queryConfig = buildInsertStatements(salesforceResponseArray, ['_id', 'external_id'], true);
-                console.log(queryConfig);
-                that.projectModel.execMultipleStatment(queryConfig, (error, result) => {
+                let queryConfig = buildInsertStatements(projectRecords, ['_id', 'external_id'], true);
+                // console.log(queryConfig);
+                that.projectModel.insertManyStatements(queryConfig, (error, result) => {
                     if (!error) {
                         console.log('In execMultipleStatment result>>', result);
 
@@ -183,7 +189,7 @@ export class ProjectController {
                         if (taskRecords && taskRecords.length) {
                             let tasksQueryConfig = buildInsertStatements(taskRecords, ['_id', 'external_id'], false);
                             console.log(tasksQueryConfig);
-                            that.projectModel.execMultipleStatment(tasksQueryConfig, (error, result1) => {
+                            that.projectModel.insertManyStatements(tasksQueryConfig, (error, result1) => {
                                 if (!error) {
                                     console.log('In execMultipleStatment task result>>', result1);
                                     result1.rows.forEach((row) => {
