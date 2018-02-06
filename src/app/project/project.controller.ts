@@ -2,9 +2,8 @@ import * as express from "express";
 import * as request from 'request';
 
 import { ProjectModel, IProjectRequest, IProjectDetails, ITaskDetails } from './project.model';
-import { formatProjectDetails, buildProjectStatement, buildProjectTasksStatement, formatSalesForceObject } from './project.helper';
+import { formatProjectDetails, buildInsertStatements, formatSalesForceObject } from './project.helper';
 import { Constants } from '../../config/constants';
-import { error } from "util";
 
 export class ProjectController {
     private projectModel: ProjectModel;
@@ -13,49 +12,44 @@ export class ProjectController {
     }
 
     create(req: express.Request, res: express.Response, next: express.NextFunction) {
-
-        console.log(req.body)
         let reqParams: IProjectRequest;
-        reqParams = {
-            name: req.body.name,
-            start_date: req.body.start_date,
-            end_date: req.body.end_date,
-            completion_per: req.body.completion_per,
-            created_by: req.body.created_by,
-            updated_by: req.body.created_by,
-        };
+        try {
+            reqParams = {
+                name: req.body.name,
+                start_date: req.body.start_date,
+                end_date: req.body.end_date,
+                completion_per: req.body.completion_per,
+                created_by: req.body.created_by,
+                updated_by: req.body.created_by,
+            };
 
-        this.projectModel.create(reqParams, (erro, result) => {
-
-        });
-
+            this.projectModel.create(reqParams, (error, results) => {
+                if (!error) {
+                    res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.SAVED, results: results });
+                } else {
+                    res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                }
+            });
+        } catch (e) {
+            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
+        }
     }
 
     getalldetails(req: express.Request, res: express.Response, next: express.NextFunction) {
+        let that = this;
         try {
-            console.log(req.body);
             if (req.body.session_id) {
-                let reqParams: IProjectRequest = {
-                    name: req.body.name,
-                    start_date: req.body.start_date,
-                    end_date: req.body.end_date,
-                    completion_per: req.body.completion_per,
-                    created_by: req.body.created_by,
-                    updated_by: req.body.created_by,
-                };
+                // Get project details from salesforce api
                 let requestHeader = {
                     headers: {
                         'Authorization' : 'Bearer ' + req.body.session_id,
                         'Content-Type': 'application/json'
                     }
                 };
-                let that = this;
-                // Get project details from salesforce 
                 request(Constants.API_END_POINTS.GET_PROJECT_AND_TASK_DETAILS, requestHeader, (error, response) => {
-
                     if (!error) {
                         if (response.statusCode === 401) {
-                            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: '401', results: response.body[0].message })
+                            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: response.body[0].message })
                         } else {
                             if (response.body && response.body.length > 0) {
                                 let projectArray: Array<IProjectDetails> = response.body;
@@ -65,7 +59,6 @@ export class ProjectController {
                                 let projects = formatProjectDetails(projectArray);
                                 that.syncUserDetails.call(that, req.body.session_id, projects);
                                 res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '', projects: projects });
-
                             }
                         }
                     } else {
@@ -73,11 +66,12 @@ export class ProjectController {
                     }
                 });
             } else {
-                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: 'Invalid session_id' });
+                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_SESSION_ID });
             }
         }
         catch (error) {
             console.log(error);
+            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
     }
 
@@ -91,7 +85,6 @@ export class ProjectController {
 
     updateProjectOrTask(req: express.Request, res: express.Response, isProjectRequest: boolean) {
         try {
-            console.log(req.body);
             if (req.body.session_id) {
                 let updatParams: IProjectDetails = {
                     name: req.body.name,
@@ -108,7 +101,7 @@ export class ProjectController {
                 let that = this;
                 that.projectModel.updateProjectOrTask(updatParams, isProjectRequest, (error, result) => {
                     if (!error) {
-                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: 'Updated data successfully.' });
+                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
 
                         let requestData = { ProjectTasks: [], Projects: [] };
                         if (isProjectRequest) {
@@ -119,47 +112,51 @@ export class ProjectController {
                         let requestData1 = {
                             Data__c: JSON.stringify(requestData)
                         }
-                        that.updateOnSalesforce(req.body.session_id, requestData);
+                        that.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, req.body.session_id, requestData);
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
                     }
                 });
             } else {
-                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: 'Invalid session_id' });
+                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_SESSION_ID });
             }
         }
         catch (error) {
-            console.log(error);
+            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
     }
 
-    updateOnSalesforce(sessionId, requestData) {
+    postRequestOnSalesforce(url: string, sessionId: string, data, callback?: (error: Error, results: any) => void) {
         let requestObj = {
-            url: Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS,
+            url: url,
             headers: {
                 'Authorization' : 'Bearer ' + sessionId,
                 'Content-Type': 'application/json'
             },
             json: true,
-            body: requestData
+            body: data
         };
-        console.log(requestObj);
+        console.log('In postRequestOnSalesforce requestObj - ', requestObj);
         request.post(requestObj, (error, response) => {
-            if (!error) {
-                if (response.statusCode === 401) {
-                } else {
-                    if (response.body && response.body.length > 0) {
-                    }
-                }
+            console.log('In postRequestOnSalesforce', error, response.body);
+            if (callback) {
+                callback(error, response);
             }
-            console.log(error);
-            console.log(response.body);
         });
     }
 
     syncUserDetails(sessionId: string, salesforceResponseArray) {
         let that = this;
-        let queryConfig = buildProjectStatement(salesforceResponseArray, ['_id', 'external_id']);
+        // let projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
+        // projectRecords = projectRecords.filter((self) => {
+        //     if (!self['external_id']) {
+        //         return true;
+        //     }
+        // });
+        // console.log(projectRecords);
+        // if (projectRecords && projectRecords.length > 0) {
+        let queryConfig = buildInsertStatements(salesforceResponseArray, ['_id', 'external_id'], true);
+        console.log(queryConfig);
         that.projectModel.execMultipleStatment(queryConfig, (error, result) => {
             if (!error) {
                 console.log('In execMultipleStatment result>>', result);
@@ -182,7 +179,7 @@ export class ProjectController {
                 });
 
                 if (taskRecords && taskRecords.length) {
-                    let tasksQueryConfig = buildProjectTasksStatement(taskRecords, ['_id', 'external_id']);
+                    let tasksQueryConfig = buildInsertStatements(taskRecords, ['_id', 'external_id'], false);
                     console.log(tasksQueryConfig);
                     that.projectModel.execMultipleStatment(tasksQueryConfig, (error, result1) => {
                         if (!error) {
@@ -198,7 +195,7 @@ export class ProjectController {
                             let requestData = {
                                 Data__c: JSON.stringify(salesforceRequestObj)
                             }
-                            that.updateOnSalesforce(sessionId, requestData);
+                            that.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, sessionId, requestData);
                         }
                     });
                 } else {
@@ -206,12 +203,15 @@ export class ProjectController {
                         let requestData = {
                             Data__c: JSON.stringify(salesforceRequestObj)
                         };
-                        that.updateOnSalesforce(sessionId, requestData);
+                        that.postRequestOnSalesforce(Constants.API_END_POINTS.UPDATE_PROJECT_OR_TASK_DETAILS, sessionId, requestData);
                     }
                 }
             } else {
                 console.log('In execMultipleStatment error>>', error);
             }
         });
+        // } else {
+        //     console.log('Nothing to sync..');
+        // }
     }
 }

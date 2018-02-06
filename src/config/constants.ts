@@ -8,5 +8,11 @@ export class Constants {
         SUCCESS: 'SUCCESS',
         ERROR: 'ERROR'
     };
+    static MESSAGES = {
+        SAVED: 'Data saved successfully',
+        UPDATED: 'Data updated successfully',
+        SOMETHING_WENT_WRONG: 'something went wrong',
+        INVALID_SESSION_ID: 'Invalid session id'
+    }
 
 }

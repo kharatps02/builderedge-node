@@ -45,14 +45,16 @@ export function formatProjectDetails(projectArray) {
     return newProjectArray;
 }
 
-export function buildProjectTasksStatement(rows, returnFieldArr = []) {
+export function buildInsertStatements(rows, returnFieldArr = [], isProjectRequest: boolean = true) {
     const params = [];
     const chunks = [];
     let valueStr = '', insertQueryStr = '', returning = '';
 
-    valueStr = "external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, project_ref_id";
+    insertQueryStr = "INSERT INTO PROJECTS ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at ) VALUES "
 
-    insertQueryStr = "INSERT INTO project_tasks ( " + valueStr + " ) VALUES "
+    if (!isProjectRequest) {
+        insertQueryStr = "INSERT INTO project_tasks ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, project_ref_id ) VALUES "
+    }
 
     if (returnFieldArr.length !== 0) {
         returning = ' RETURNING ' + returnFieldArr.toString();
@@ -94,74 +96,16 @@ export function buildProjectTasksStatement(rows, returnFieldArr = []) {
         params.push(row.updated_at);
         valueClause.push('$' + params.length);
 
-        params.push(row.project_ref_id);
-        valueClause.push('$' + params.length);
+
+        if (!isProjectRequest) {
+            params.push(row.project_ref_id);
+            valueClause.push('$' + params.length);
+        }
 
         chunks.push('(' + valueClause.join(', ') + ')')
     });
     return {
         text: insertQueryStr + chunks.join(', ') + returning,
-        values: params
-    }
-}
-
-
-export function buildProjectStatement(rows, returnFieldArr = []) {
-    const params = [];
-    const chunks = [];
-    let valueStr = '', insertQueryStr = '', returning = '';
-
-    valueStr = "external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at";
-
-    insertQueryStr = "INSERT INTO PROJECTS ( " + valueStr + " ) VALUES "
-
-    if (returnFieldArr.length !== 0) {
-        returning = ' RETURNING ' + returnFieldArr.toString();
-    }
-
-    rows.forEach(row => {
-        const valueClause = [];
-
-        params.push(row.id);
-        valueClause.push('$' + params.length);
-
-        params.push(row.name);
-        valueClause.push('$' + params.length);
-
-        params.push(row.description);
-        valueClause.push('$' + params.length);
-
-        params.push(row.start_date);
-        valueClause.push('$' + params.length);
-
-        params.push(row.end_date);
-        valueClause.push('$' + params.length);
-
-        params.push(row.completion_per);
-        valueClause.push('$' + params.length);
-
-        params.push(row.status);
-        valueClause.push('$' + params.length);
-
-        params.push(row.created_by);
-        valueClause.push('$' + params.length);
-
-        params.push(row.updated_by);
-        valueClause.push('$' + params.length);
-
-        params.push(row.created_at);
-        valueClause.push('$' + params.length);
-
-        params.push(row.updated_at);
-        valueClause.push('$' + params.length);
-
-        // params.push(row.project_ref_id);
-        // valueClause.push('$' + params.length);
-
-        chunks.push('(' + valueClause.join(', ') + ')')
-    });
-    return {
-        text: insertQueryStr + chunks.join(', ') + ' ON CONFLICT DO NOTHING ' + returning,
         values: params
     }
 }
