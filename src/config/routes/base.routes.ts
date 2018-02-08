@@ -1,9 +1,9 @@
 import * as express from "express";
 import { ProjectRoutes } from '../../app/project/project.routes';
 
-let app = express();
+const app = express();
 export class BaseRoutes {
-  get routes() {    
+  get routes() {
     app.use('/', new ProjectRoutes().routes);
     app.use('/', (req, res) => {
       res.render('index', { title: "Builderedge Node Js App" });

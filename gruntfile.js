@@ -1,49 +1,48 @@
-module.exports = function(grunt) {
+module.exports = function (grunt) {
   "use strict";
 
   grunt.initConfig({
     copy: {
       build: {
-        files: [
-          {
+        files: [{
             expand: true,
             cwd: "./public",
             src: ["**"],
-            dest: "./dist/public"
+            dest: "./dist/public",
           },
           {
             expand: true,
             cwd: "./views",
             src: ["**"],
-            dest: "./dist/views"
-          }
-        ]
-      }
+            dest: "./dist/views",
+          },
+        ],
+      },
     },
     ts: {
       app: {
         files: [{
           src: ["src/\*\*/\*.ts", "!src/.baseDir.ts"],
-          dest: "./dist"
+          dest: "./dist",
         }],
         options: {
           module: "commonjs",
           target: "es6",
-          sourceMap: false,
-          rootDir: "src"
-        }
-      }
+          sourceMap: true,
+          rootDir: "src",
+        },
+      },
     },
     watch: {
       ts: {
         files: ["src/\*\*/\*.ts"],
-        tasks: ["ts"]
+        tasks: ["ts"],
       },
       views: {
         files: ["views/**/*.pug"],
-        tasks: ["copy"]
-      }
-    }
+        tasks: ["copy"],
+      },
+    },
   });
 
   grunt.loadNpmTasks("grunt-contrib-copy");
@@ -52,6 +51,6 @@ module.exports = function(grunt) {
 
   grunt.registerTask("default", [
     "copy",
-    "ts"
+    "ts",
   ]);
 };

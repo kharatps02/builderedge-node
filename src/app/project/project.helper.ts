@@ -1,7 +1,7 @@
-export function formatProjectDetails(projectArray) {
-    let newProjectArray = [];
-    projectArray.forEach(project => {
-        let newProject = { series: [] };
+export function formatProjectDetails(projectArray: any[]) {
+    const newProjectArray: any[] = [];
+    projectArray.forEach((project: any) => {
+        const newProject: { [key: string]: any, series: any[] } = { series: [] };
         newProject['id'] = project['Id'];
         newProject['name'] = project['Name'] || '';
         newProject['description'] = project['Description__c'] || '';
@@ -17,9 +17,10 @@ export function formatProjectDetails(projectArray) {
         newProject['updated_at'] = project['LastModifiedDate'];
         newProject['external_id'] = project['External_Id__c'];
 
-        if (project.Project_Tasks__r && project.Project_Tasks__r.records && project.Project_Tasks__r.records.length > 0) {
-            project.Project_Tasks__r.records.forEach(task => {
-                let newTask = {};
+        if (project.Project_Tasks__r && project.Project_Tasks__r.records
+            && project.Project_Tasks__r.records.length > 0) {
+            project.Project_Tasks__r.records.forEach((task: any) => {
+                const newTask: { [key: string]: any } = {};
 
                 newTask['id'] = task['Id'];
                 newTask['name'] = task['Name'] || '';

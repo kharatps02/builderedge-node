@@ -29,13 +29,13 @@ export class ProjectModel {
         pgClient.connect();
 
         projectTasks.forEach((task) => {
-            asyncTasks.push(function (callback) {
+            asyncTasks.push(function(callback) {
                 let queryConfig = buildUpdateStatements(task, isProject);
                 console.log(queryConfig);
                 pgClient.query(queryConfig, callback);
             });
         });
-        async.parallel(asyncTasks, (error, results) => {
+        async.parallel(asyncTasks, (error: Error, results) => {
             pgClient.end();
             callback(error, results);
         });
