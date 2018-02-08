@@ -7,20 +7,20 @@ export class OrgMasterModel {
 
     }
 
-    public init(callback: (error: Error, results: Map<string, any>) => void) {
+    public getAllOrgDetails(callback: (error: Error, results: IOrgMaster[]) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         const queryString = 'SELECT * FROM ORG_MASTER';
         const orgConfigMap = new Map<string, any>();
 
-        pgClient.query(queryString, (err, results) => {
-            console.log(results);
-            results.rows.forEach((row) => {
-                orgConfigMap[row.vanity_id] = row;
-            });
+        pgClient.query(queryString, (error1, results) => {
+            // console.log(results);
+            // results.rows.forEach((row) => {
+            //     orgConfigMap[row.vanity_id] = row;
+            // });
             //  Constants.ORG_CONFIG_MAP = orgConfigMap;
             pgClient.end();
-            callback(err, orgConfigMap);
+            callback(error1, results.rows);
         });
     }
 
