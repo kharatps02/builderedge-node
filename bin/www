@@ -3,7 +3,6 @@
 
 //module dependencies
 let server = require("../dist/server");
-let cometServer = require("../dist/comet-server");
 let debug = require("debug")("express:server");
 let http = require("http");
 
@@ -22,18 +21,6 @@ httpServer.on("error", onError);
 //start listening on port
 httpServer.on("listening", onListening);
 
-
-
-
-let cometdServer = cometServer.CometdServer.bootstrap().cometdServer;
-let httpServer1 = http.createServer(cometdServer.handle);
-
-httpServer1.listen(4301, function (error, result) {
-  console.log('In httpServer1', error, result);
-  //   // Your application code here.
-});
-
-httpServer1.on("listening", onListening1);
 
 /**
  * Normalize a port into a number, string, or false.
