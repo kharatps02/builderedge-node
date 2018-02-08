@@ -7,53 +7,49 @@ import { buildUpdateStatements } from './project.helper';
 // import *  as pg from 'pg';
 
 export class ProjectModel {
-    private pgClient: Client
+    private pgClient: Client;
     constructor() {
 
     }
 
-    create(params: IProjectRequest, callback: (error: Error, results: any) => void) {
-        let pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+    public create(params: IProjectRequest, callback: (error: Error, results: any) => void) {
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        let addQueryString = 'INSERT INTO PROJECT(name, start_date, end_date, completion_per, created_by, updated_by) VALUES ($1,$2,$3,$4,$5,$6)';
-        let addQueryValues = [params.name, params.start_date, params.end_date, params.completion_per, params.created_by, params.updated_by];
+        const addQueryString = 'INSERT INTO PROJECT(name, start_date, end_date, completion_per, created_by, updated_by) VALUES ($1,$2,$3,$4,$5,$6)';
+        const addQueryValues = [params.name, params.start_date, params.end_date, params.completion_per, params.created_by, params.updated_by];
         pgClient.query(addQueryString, addQueryValues, (err, results) => {
             callback(err, results);
             pgClient.end();
         });
     }
 
-    updateProjectsOrTasks(projectTasks: Array<any>, isProject = true, callback: (error: Error, results: any) => void) {
-        let asyncTasks = [];
-        let pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+    public updateProjectsOrTasks(projectTasks: any[], isProject = true, callback: (error: Error, results: any) => void) {
+        const asyncTasks = [];
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
 
         projectTasks.forEach((task) => {
-            asyncTasks.push(function(callback) {
-                let queryConfig = buildUpdateStatements(task, isProject);
+            asyncTasks.push((callback1) => {
+                const queryConfig = buildUpdateStatements(task, isProject);
                 console.log(queryConfig);
-                pgClient.query(queryConfig, callback);
+                pgClient.query(queryConfig, callback1);
             });
         });
-        async.parallel(asyncTasks, (error: Error, results) => {
+        async.parallel(asyncTasks, (error1: Error, results) => {
             pgClient.end();
-            callback(error, results);
+            callback(error1, results);
         });
     }
 
-
-    insertManyStatements(queryObj: { text: string, values: Array<any> }, callback: (error: Error, results: any) => void) {
-        let pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+    public insertManyStatements(queryObj: { text: string, values: any[] }, callback: (error: Error, results: any) => void) {
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         pgClient.query(queryObj, (err, results) => {
             pgClient.end();
             callback(err, results);
         });
     }
-
 }
-
-
 
 export interface IProjectRequest {
     name: string;
@@ -80,9 +76,9 @@ export interface IProjectDetails {
     created_at?: Date;
     updated_at?: Date;
     project_ref_id?: string;
-    records?: Array<ITaskDetails>;
-};
+    records?: ITaskDetails[];
+}
 
 export interface ITaskDetails extends IProjectDetails {
     project_ref_id: string;
-};
+}

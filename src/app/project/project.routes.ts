@@ -11,7 +11,7 @@ export class ProjectRoutes {
     }
 
     get routes() {
-        let router = express.Router();
+        const router = express.Router();
         router.post('/api/project/create', this.authentication.ensureAuthorized, this.projectController.create.bind(this.projectController));
         router.post('/api/project/update', this.authentication.ensureAuthorized, this.projectController.updateProject.bind(this.projectController));
         router.post('/api/task/update', this.authentication.ensureAuthorized, this.projectController.updateTask.bind(this.projectController));
