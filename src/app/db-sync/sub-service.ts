@@ -1,10 +1,10 @@
-import { Constants } from './config/constants';
+import { Constants } from '../../config/constants';
 import * as lib from "cometd";
 import * as cometDNode from 'cometd-nodejs-client';
-import { OrgMasterModel, IOrgMaster } from './app/org-master/org-master.model';
+import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
 import * as request from 'request';
 
-export class SyncService {
+export class SubService {
     private sessionId: any;
     private cometd: any;
     private orgMasterModel: OrgMasterModel;
