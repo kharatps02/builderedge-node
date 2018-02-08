@@ -1,10 +1,11 @@
 import * as bodyParser from "body-parser";
+import * as errorHandler from "errorhandler";
 import * as express from "express";
 import * as logger from "morgan";
 import * as path from "path";
-import * as errorHandler from "errorhandler";
 
-import { BaseRoutes } from './config/routes/base.routes'
+import { BaseRoutes } from './config/routes/base.routes';
+import { SyncService } from "./sync-service";
 
 /**
  * The server.
@@ -33,13 +34,13 @@ export class Server {
    * @constructor
    */
   constructor() {
-    //create expressjs application
+    // create expressjs application
     this.app = express();
 
-    //configure application
+    // configure application
     this.config();
 
-    //add routes
+    // add routes
     this.routes();
   }
 
@@ -50,39 +51,43 @@ export class Server {
    * @method config
    */
   public config() {
-    //add static paths
+    // add static paths
     this.app.use(express.static(path.join(__dirname, "public")));
 
-    //configure pug
+    // configure pug
     this.app.set("views", path.join(__dirname, "views"));
     this.app.engine('html', require('ejs').renderFile);
     this.app.set("view engine", "html");
 
-    this.app.use(function (req, res, next) {
+    this.app.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
       res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization');
       next();
     });
-    //mount logger
+    // mount logger
     this.app.use(logger("dev"));
 
-    //mount json form parser
+    // mount json form parser
     this.app.use(bodyParser.json());
 
-    //mount query string parser
+    // mount query string parser
     this.app.use(bodyParser.urlencoded({
-      extended: true
+      extended: true,
     }));
 
     // catch 404 and forward to error handler
-    this.app.use(function (err: any, req: express.Request, res: express.Response, next: express.NextFunction) {
+    this.app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
       err.status = 404;
       next(err);
     });
 
-    //error handling
+    // error handling
     this.app.use(errorHandler());
+
+    // Start the sync service. This subscribes the salesforce endpoint event.
+    const service = new SyncService();
+    service.listen();
   }
 
   /**
@@ -93,7 +98,7 @@ export class Server {
    * @return void
    */
   private routes() {
-    //use router middleware
+    // use router middleware
     this.app.use(new BaseRoutes().routes);
   }
 
