@@ -16,8 +16,8 @@ export namespace Constants {
         INVALID_REQUEST_PARAMS: 'Invalid request params',
     };
     export const SALESFORCE_PLATFORM_EVENTS_CONFIG = {
-        URL: 'https://ap5.salesforce.com/cometd/40.0/',
-        EVENT: '/event/ProjectTaskService__e',
+        // URL: 'https://ap5.salesforce.com/cometd/40.0/',
+        SUB_EVENT_NAME: '/event/ProjectTaskService__e',
         //// ORG 1
         // OAUTH: {
         //     url: 'https://ap5.salesforce.com/services/oauth2/token',

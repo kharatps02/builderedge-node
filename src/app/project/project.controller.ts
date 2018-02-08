@@ -136,7 +136,9 @@ export class ProjectController {
         const requestData = {
             Data__c: JSON.stringify(data),
         };
-        this.postRequestOnSalesforce(params, requestData);
+        if (params.session_id) {
+            this.postRequestOnSalesforce(params, requestData);
+        }
     }
 
     // Following function sent post request on salesforce endpoints
@@ -224,7 +226,9 @@ export class ProjectController {
                                     const requestData = {
                                         Data__c: JSON.stringify(salesforceRequestObj),
                                     };
-                                    that.postRequestOnSalesforce(params, requestData);
+                                    if (params.session_id) {
+                                        that.postRequestOnSalesforce(params, requestData);
+                                    }
                                 }
                             });
                         } else {
@@ -233,7 +237,9 @@ export class ProjectController {
                                 const requestData = {
                                     Data__c: JSON.stringify(salesforceRequestObj),
                                 };
-                                that.postRequestOnSalesforce(params, requestData);
+                                if (params.session_id) {
+                                    that.postRequestOnSalesforce(params, requestData);
+                                }
                             }
                         }
                     } else {

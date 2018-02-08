@@ -5,7 +5,7 @@ import * as logger from "morgan";
 import * as path from "path";
 
 import { BaseRoutes } from './config/routes/base.routes';
-import { SyncService } from "./sync-service";
+import { SubController } from "./app/db-sync/sub-controller";
 
 /**
  * The server.
@@ -42,11 +42,9 @@ export class Server {
 
     // add routes
     this.routes();
-    // new OrgConfig().init((error: Error, orgConfigMap: Map<string, Object>) => {
-    //   if (!error) {
-    //     Constants.ORG_CONFIG_MAP = orgConfigMap;
-    //   }
-    // });
+
+    // Start the sub controller. This subscribes the salesforce endpoints event.
+    new SubController().init();
   }
 
   /**
@@ -89,10 +87,6 @@ export class Server {
 
     // error handling
     this.app.use(errorHandler());
-
-    // Start the sync service. This subscribes the salesforce endpoint event.
-    const service = new SyncService();
-    service.listen();
   }
 
   /**

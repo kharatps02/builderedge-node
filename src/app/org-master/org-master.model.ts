@@ -10,15 +10,10 @@ export class OrgMasterModel {
     public getAllOrgDetails(callback: (error: Error, results: IOrgMaster[]) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        const queryString = 'SELECT * FROM ORG_MASTER';
+        const queryString = 'SELECT DISTINCT ON (org_id) * FROM ORG_MASTER';
         const orgConfigMap = new Map<string, any>();
 
         pgClient.query(queryString, (error1, results) => {
-            // console.log(results);
-            // results.rows.forEach((row) => {
-            //     orgConfigMap[row.vanity_id] = row;
-            // });
-            //  Constants.ORG_CONFIG_MAP = orgConfigMap;
             pgClient.end();
             callback(error1, results.rows);
         });
@@ -31,7 +26,7 @@ export class OrgMasterModel {
         const orgConfigMap = new Map<string, any>();
         pgClient.query(queryString, [userId], (error1, results) => {
             pgClient.end();
-            console.log(results.rows[0]);
+            // console.log(results.rows[0]);
             callback(error1, results.rows[0]);
         });
     }
