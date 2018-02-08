@@ -20,7 +20,7 @@ declare module 'cometd' {
     }
 
     class CometD {
-        constructor(name: string);
+        constructor(name?: string);
         onListenerException: (exception: any, subscriptionHandle: any, isListener: boolean, message: string) => void;
 
         init(options: CometD.ConfigurationOptions): void;
@@ -36,7 +36,7 @@ declare module 'cometd' {
 
         handshake(handshake_params: any): void;
 
-        publish(channel: string, message: any): void;
+        publish(channel: string, message: any, callback?: (publishAck) => void): void;
 
 
         disconnect(): void;
