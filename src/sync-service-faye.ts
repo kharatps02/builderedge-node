@@ -23,8 +23,27 @@ export class SyncService {
     /**
      * publish
      */
-    public publish(data: any) {
+    public publish(data?: any) {
+        this.authenticateAndRun((error, response) => {
+            if (error) {
+                console.error(error);
+                return;
+            }
+            console.log('Now publishing to the event ', Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT);
+            this.client.setHeader('Authorization', `OAuth ${response.toJSON().body.access_token}`);
+            // this.client.disable('websocket');
+            this.client.disable('autodisconnect');
+            const publication = this.client.publish(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT, { Data__c: "hello" });
 
+            publication.then(() => {
+                console.log('Message received by server!');
+            }, (error1: any) => {
+                console.log('There was a problem: ' + error1.message);
+            });
+            this.client.subscribe(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT, (data1) => {
+                console.log('Got a message: ', data1);
+            });
+        });
     }
     /**
      * listen
