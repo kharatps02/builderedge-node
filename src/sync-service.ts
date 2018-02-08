@@ -97,24 +97,24 @@ export class SyncService {
         });
         return;
         // org.authenticate({ username: 'builderedge.poc2@gmail.com', password: 'pocorg@123' }, (err) => {
-        org.authenticate((err, res) => {
-            if (err) {
-                console.error("Salesforce authentication error");
-                console.error(err);
-            } else {
-                console.log("Salesforce authentication successful");
-                console.log(org.oauth.instance_url);
-                const event = nforce.createSObject(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME);
-                event.set('Data__c', "HELLOOOO");
-                org.insert({ sobject: event }, (err1: any) => {
-                    if (err1) {
-                        console.error(err1);
-                    } else {
-                        console.log(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME, " published");
-                    }
-                });
-            }
-        });
+        // org.authenticate((err, res) => {
+        //     if (err) {
+        //         console.error("Salesforce authentication error");
+        //         console.error(err);
+        //     } else {
+        //         console.log("Salesforce authentication successful");
+        //         console.log(org.oauth.instance_url);
+        //         const event = nforce.createSObject(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME);
+        //         event.set('Data__c', "HELLOOOO");
+        //         org.insert({ sobject: event }, (err1: any) => {
+        //             if (err1) {
+        //                 console.error(err1);
+        //             } else {
+        //                 console.log(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME, " published");
+        //             }
+        //         });
+        //     }
+        // });
 
     }
     /**
