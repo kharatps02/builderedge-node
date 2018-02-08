@@ -1,49 +1,57 @@
-export function formatProjectDetails(projectArray: any[]) {
+export function formatProjectAndTaskDetails(projectArray: any[]) {
     const newProjectArray: any[] = [];
     projectArray.forEach((project: any) => {
-        const newProject: { [key: string]: any, series: any[] } = { series: [] };
-        newProject['id'] = project['Id'];
-        newProject['name'] = project['Name'] || '';
-        newProject['description'] = project['Description__c'] || '';
-        newProject['start'] = new Date(project['Start_Date__c']).getTime();
-        newProject['end'] = new Date(project['End_Date__c']).getTime();
-        newProject['start_date'] = project['Start_Date__c'];
-        newProject['end_date'] = project['End_Date__c'];
-        newProject['completion_per'] = project['Completion_Percentage__c'];
-        newProject['status'] = project['Status__c'];
-        newProject['created_by'] = project['CreatedById'];
-        newProject['updated_by'] = project['LastModifiedById'];
-        newProject['created_at'] = project['CreatedDate'];
-        newProject['updated_at'] = project['LastModifiedDate'];
-        newProject['external_id'] = project['External_Id__c'];
-
+        let newProject: { [key: string]: any, series: any[] } = { series: [] };
+        newProject = formatProjectDetails(project);
         if (project.Project_Tasks__r && project.Project_Tasks__r.records
             && project.Project_Tasks__r.records.length > 0) {
             project.Project_Tasks__r.records.forEach((task: any) => {
-                const newTask: { [key: string]: any } = {};
-
-                newTask['id'] = task['Id'];
-                newTask['name'] = task['Name'] || '';
-                newTask['description'] = task['Description__c'] || '';
-                newTask['start'] = new Date(task['Start_Date__c']).getTime();
-                newTask['end'] = new Date(task['End_Date__c']).getTime();
-                newTask['start_date'] = project['Start_Date__c'];
-                newTask['end_date'] = project['End_Date__c'];
-                newTask['completion_per'] = task['Completion_Percentage__c'];
-                newTask['status'] = task['Status__c'];
-                newTask['created_by'] = task['CreatedById'];
-                newTask['updated_by'] = task['LastModifiedById'];
-                newTask['created_at'] = task['CreatedDate'];
-                newTask['updated_at'] = task['LastModifiedDate'];
-                newTask['external_id'] = task['External_Id__c'];
-                newTask['project_ref_id'] = task['Project__c'];
+                let newTask: { [key: string]: any } = {};
+                newTask = formatTaskDetails(task);
                 newProject.series.push(newTask);
             });
         }
         newProjectArray.push(newProject);
     });
-
     return newProjectArray;
+}
+
+export function formatTaskDetails(task) {
+    const newTask: { [key: string]: any } = {};
+    newTask['id'] = task['Id'];
+    newTask['name'] = task['Name'] || '';
+    newTask['description'] = task['Description__c'] || '';
+    newTask['start'] = new Date(task['Start_Date__c']).getTime();
+    newTask['end'] = new Date(task['End_Date__c']).getTime();
+    newTask['start_date'] = task['Start_Date__c'];
+    newTask['end_date'] = task['End_Date__c'];
+    newTask['completion_per'] = task['Completion_Percentage__c'];
+    newTask['status'] = task['Status__c'];
+    newTask['created_by'] = task['CreatedById'];
+    newTask['updated_by'] = task['LastModifiedById'];
+    newTask['created_at'] = task['CreatedDate'];
+    newTask['updated_at'] = task['LastModifiedDate'];
+    newTask['external_id'] = task['External_Id__c'];
+    newTask['project_ref_id'] = task['Project__c'];
+    return newTask;
+}
+export function formatProjectDetails(project) {
+    const newProject: { [key: string]: any, series: any[] } = { series: [] };
+    newProject['id'] = project['Id'];
+    newProject['name'] = project['Name'] || '';
+    newProject['description'] = project['Description__c'] || '';
+    newProject['start'] = new Date(project['Start_Date__c']).getTime();
+    newProject['end'] = new Date(project['End_Date__c']).getTime();
+    newProject['start_date'] = project['Start_Date__c'];
+    newProject['end_date'] = project['End_Date__c'];
+    newProject['completion_per'] = project['Completion_Percentage__c'];
+    newProject['status'] = project['Status__c'];
+    newProject['created_by'] = project['CreatedById'];
+    newProject['updated_by'] = project['LastModifiedById'];
+    newProject['created_at'] = project['CreatedDate'];
+    newProject['updated_at'] = project['LastModifiedDate'];
+    newProject['external_id'] = project['External_Id__c'];
+    return newProject;
 }
 
 export function buildInsertStatements(rows, returnFieldArr = [], isProjectRequest: boolean = true) {

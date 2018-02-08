@@ -23,14 +23,13 @@ export class ProjectModel {
         });
     }
 
-    public updateProjectsOrTasks(projectTasks: any[], isProject = true, callback: (error: Error, results: any) => void) {
+    public updateProjectsOrTasks(projectTaskQueryArray: any[], isProject = true, callback: (error: Error, results: any) => void) {
         const asyncTasks = [];
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
 
-        projectTasks.forEach((task) => {
+        projectTaskQueryArray.forEach((queryConfig) => {
             asyncTasks.push((callback1) => {
-                const queryConfig = buildUpdateStatements(task, isProject);
                 console.log(queryConfig);
                 pgClient.query(queryConfig, callback1);
             });
