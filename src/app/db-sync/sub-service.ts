@@ -4,7 +4,7 @@ import { Constants } from '../../config/constants';
 import * as cometDNode from 'cometd-nodejs-client';
 import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
 import { ProjectModel } from '../project/project.model';
-import { ProjectController } from 'src/app/project/project.controller';
+import { ProjectController } from '../project/project.controller';
 
 export class SubService {
     private sessionId: any;
@@ -43,7 +43,7 @@ export class SubService {
             this.cometd.handshake((h: any) => {
                 if (h.successful) {
                     // Subscribe to receive messages from the server.
-                    this.cometd.subscribe(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.SUB_EVENT_NAME, (m: any) => {
+                    this.cometd.subscribe(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT, (m: any) => {
                         const dataFromServer = m.data;
                         console.log('Response Received! :', dataFromServer);
                         if (dataFromServer && dataFromServer.payload) {

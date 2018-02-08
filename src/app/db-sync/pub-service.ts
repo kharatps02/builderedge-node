@@ -1,14 +1,15 @@
+import { IOrgMaster } from './../org-master/org-master.model';
 import { CometD } from "cometd";
 import * as nforce from "nforce";
 import { Constants } from "../../config/constants";
 import * as request from 'request';
 
 export class PubService {
-    constructor() {
+    constructor(private orgConfig: IOrgMaster) {
 
     }
     // /**
-    //  * @description publish
+    //  * @description publish via cometD
     //  */
     // public publish(channel: string, data: any, callback?: (publishAck?: any) => void) {
     //     this.client.publish(channel, data, (publishAck) => {
@@ -20,8 +21,7 @@ export class PubService {
     //         }
     //     });
     // }
-    public publishRest(data?: any) {
-
+    public publish(data?: any) {
         const org = nforce.createConnection({
             clientId: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_id,
             clientSecret: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_secret,
@@ -31,10 +31,10 @@ export class PubService {
             environment: 'production',  // optional, salesforce 'sandbox' or 'production', production default
             mode: 'single', // optional, 'single' or 'multi' user mode, multi default
             grant_type: "refresh_token",
-            refresh_token: '5Aep8613hy0tHCYdhwe9FB19lxxsD1U4lzJJTGz11pm4z6GL6nOSvZIW56wdCiEJIztVCqniYXkzYwCdkz2nfXY',
+            refresh_token: this.orgConfig.refresh_token,
         });
         // multi user mode
-        this.authenticateAndRun((error: any, response: request.Response) => {
+        this.authenticateAndRun(this.orgConfig, (error: any, response: request.Response) => {
             org.oauth = response.toJSON().body;
             console.log(org.oauth.instance_url);
             const event = nforce.createSObject(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME);
@@ -49,12 +49,12 @@ export class PubService {
         });
 
     }
-    private authenticateAndRun(callback: (error: any, response: request.Response) => void) {
+    private authenticateAndRun(orgConfig: IOrgMaster, callback: (error: any, response: request.Response) => void) {
         const serviceUserAuthConfig = {
             grant_type: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.grant_type,
             client_id: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_id,
             client_secret: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_secret,
-            refresh_token: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.refresh_token,
+            refresh_token: this.orgConfig.refresh_token,
         };
         const requestObj = {
             url: 'https://ap5.salesforce.com/services/oauth2/token',
