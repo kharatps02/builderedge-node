@@ -5,6 +5,7 @@ import * as cometDNode from 'cometd-nodejs-client';
 import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
 import { ProjectModel } from '../project/project.model';
 import { ProjectController } from 'src/app/project/project.controller';
+import { buildUpdateStatements, formatProjectDetails, formatTaskDetails } from '../project/project.helper';
 
 export class SubService {
     private sessionId: any;
@@ -71,14 +72,34 @@ export class SubService {
         }
         if (data.Projects !== null) {
             records = data.Projects;
+            records = records.map((self) => {
+                self = formatProjectDetails(self);
+                const externalId = self['external_id'];
+                self['external_id'] = self['id'];
+                self['id'] = externalId;
+                return self;
+            });
         } else if (data.ProjectTasks !== null) {
             records = data.ProjectTasks;
+            records = records.map((self) => {
+                self = formatTaskDetails(self);
+                const externalId = self['external_id'];
+                self['external_id'] = self['id'];
+                self['id'] = externalId;
+                return self;
+            });
             isProjectRequest = false;
         }
 
         if (records && records.length > 0) {
             if (payload.Action__c === 'update') {
-                this.projectModel.updateProjectsOrTasks(records, isProjectRequest, (error, results) => {
+                const queryConfigArray = [];
+                records.forEach((task) => {
+                    const queryConfig = buildUpdateStatements(task, isProjectRequest);
+                    queryConfigArray.push(queryConfig);
+                });
+
+                this.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
                     console.log(error, results);
                     if (!error) {
                     }
