@@ -5,7 +5,7 @@ import * as logger from "morgan";
 import * as path from "path";
 
 import { BaseRoutes } from './config/routes/base.routes';
-import { SyncService } from "./sync-service-faye";
+import { SyncService } from "./sync-service";
 
 /**
  * The server.

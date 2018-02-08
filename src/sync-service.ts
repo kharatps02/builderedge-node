@@ -26,9 +26,6 @@ export class SyncService {
                 logLevel: 'debug',
                 requestHeaders: {
                     // Test data:
-                    // tslint:disable-next-line:max-line-length
-                    // Authorization: 'Bearer 00D7F000004e6Pi!AQ4AQCAdgGyYogsKJu7MxjicqqmpPt5bAqKEd_f9NOde5tR9NKBxvAN.XtpNoFOSYFAVnJJjSpT1rd2MED86qRLNKoNf_l3J', //  + this.sessionId,
-                    // Authorization: 'OAuth 00D7F000004e6Pi!AQ4AQColcJS.xT84v.862dSO85P3UVVTL7Lqqt01b91FSaPTDOTLdgpGHrR5y_3h9pkfY.shmR7XLrNtm7TXXAJimWYr0VKC', //  + this.sessionId,
                     Authorization: 'OAuth ' + this.sessionId,
                 },
             });
@@ -39,7 +36,7 @@ export class SyncService {
                     // Subscribe to receive messages from the server.
                     this.cometd.subscribe(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT, (m: any) => {
                         const dataFromServer = m.data;
-                        console.log(dataFromServer);
+                        console.log('Response Received! :', dataFromServer);
                         // Use dataFromServer here.
                     });
                 } else {
