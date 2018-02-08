@@ -12,8 +12,8 @@
         "member-ordering": false,
         "no-string-literal": false,
         "no-namespace": false,
-        "ordered-imports": false
+        "ordered-imports": false,
+        "max-line-length": 180
     },
     "rulesDirectory": []
-
 }

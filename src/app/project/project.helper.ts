@@ -49,19 +49,21 @@ export function formatProjectDetails(projectArray: any[]) {
 export function buildInsertStatements(rows, returnFieldArr = [], isProjectRequest: boolean = true) {
     const params = [];
     const chunks = [];
-    let valueStr = '', insertQueryStr = '', returning = '';
+    const valueStr = '';
+    let insertQueryStr = '';
+    let returning = '';
 
-    insertQueryStr = "INSERT INTO PROJECTS ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at ) VALUES "
+    insertQueryStr = "INSERT INTO PROJECTS ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at ) VALUES ";
 
     if (!isProjectRequest) {
-        insertQueryStr = "INSERT INTO project_tasks ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, project_ref_id ) VALUES "
+        insertQueryStr = "INSERT INTO project_tasks ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, project_ref_id ) VALUES ";
     }
 
     if (returnFieldArr.length !== 0) {
         returning = ' RETURNING ' + returnFieldArr.toString();
     }
 
-    rows.forEach(row => {
+    rows.forEach((row) => {
         const valueClause = [];
 
         params.push(row.id);
@@ -97,23 +99,23 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
         params.push(row.updated_at);
         valueClause.push('$' + params.length);
 
-
         if (!isProjectRequest) {
             params.push(row.project_ref_id);
             valueClause.push('$' + params.length);
         }
 
-        chunks.push('(' + valueClause.join(', ') + ')')
+        chunks.push('(' + valueClause.join(', ') + ')');
     });
+
     return {
         text: insertQueryStr + chunks.join(', ') + returning,
-        values: params
-    }
+        values: params,
+    };
 }
 
 export function formatSalesForceObject(params) {
 
-    let record = {};
+    const record = {};
 
     if (params.name) {
         record['Name'] = params.name;
@@ -148,9 +150,8 @@ export function formatSalesForceObject(params) {
     return record;
 }
 
-
-export function buildUpdateStatements(params, isProject): { text: string, values: Array<any> } {
-    let queryValues = [];
+export function buildUpdateStatements(params, isProject): { text: string, values: any[] } {
+    const queryValues = [];
     const valueClause = [];
 
     if (params.name) {
@@ -194,7 +195,6 @@ export function buildUpdateStatements(params, isProject): { text: string, values
     // console.log('updateQueryString', updateQueryString, queryValues);
     return {
         text: updateQueryString,
-        values: queryValues
+        values: queryValues,
     };
 }
-

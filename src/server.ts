@@ -42,6 +42,11 @@ export class Server {
 
     // add routes
     this.routes();
+    // new OrgConfig().init((error: Error, orgConfigMap: Map<string, Object>) => {
+    //   if (!error) {
+    //     Constants.ORG_CONFIG_MAP = orgConfigMap;
+    //   }
+    // });
   }
 
   /**
