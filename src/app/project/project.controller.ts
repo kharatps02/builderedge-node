@@ -4,7 +4,7 @@ import * as async from 'async';
 
 import { ProjectModel, IProjectRequest, IProjectDetails, ITaskDetails } from './project.model';
 import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
-import { formatProjectDetails, buildInsertStatements, formatSalesForceObject } from './project.helper';
+import { formatProjectAndTaskDetails, buildInsertStatements, formatSalesForceObject, buildUpdateStatements } from './project.helper';
 import { Constants } from '../../config/constants';
 
 export class ProjectController {
@@ -63,7 +63,7 @@ export class ProjectController {
                                         if (typeof response.body === 'string') {
                                             projectArray = JSON.parse(response.body);
                                         }
-                                        const formatedProjects = formatProjectDetails(projectArray);
+                                        const formatedProjects = formatProjectAndTaskDetails(projectArray);
 
                                         that.syncSalesforceUserDetails.call(that, req.body.session_id, formatedProjects);
                                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
@@ -100,8 +100,12 @@ export class ProjectController {
                 const that = this;
                 const asyncTasks = [];
                 const records = req.body.records;
-
-                that.projectModel.updateProjectsOrTasks(records, isProjectRequest, (error, results) => {
+                const queryConfigArray = [];
+                records.forEach((task) => {
+                    const queryConfig = buildUpdateStatements(task, isProjectRequest);
+                    queryConfigArray.push(queryConfig);
+                });
+                that.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
                     console.log(error, results);
                     if (!error) {
                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
@@ -136,7 +140,9 @@ export class ProjectController {
         const requestData = {
             Data__c: JSON.stringify(data),
         };
-        this.postRequestOnSalesforce(params, requestData);
+        if (params.session_id) {
+            this.postRequestOnSalesforce(params, requestData);
+        }
     }
 
     // Following function sent post request on salesforce endpoints
@@ -224,7 +230,9 @@ export class ProjectController {
                                     const requestData = {
                                         Data__c: JSON.stringify(salesforceRequestObj),
                                     };
-                                    that.postRequestOnSalesforce(params, requestData);
+                                    if (params.session_id) {
+                                        that.postRequestOnSalesforce(params, requestData);
+                                    }
                                 }
                             });
                         } else {
@@ -233,7 +241,9 @@ export class ProjectController {
                                 const requestData = {
                                     Data__c: JSON.stringify(salesforceRequestObj),
                                 };
-                                that.postRequestOnSalesforce(params, requestData);
+                                if (params.session_id) {
+                                    that.postRequestOnSalesforce(params, requestData);
+                                }
                             }
                         }
                     } else {
