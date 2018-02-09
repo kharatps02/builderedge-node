@@ -5,7 +5,8 @@ import * as cometDNode from 'cometd-nodejs-client';
 import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
 import { ProjectModel } from '../project/project.model';
 import { ProjectController } from '../project/project.controller';
-import { buildUpdateStatements, formatProjectDetails, formatTaskDetails, buildInsertStatements } from '../project/project.helper';
+import { buildUpdateStatements, formatProjectDetails, formatTaskDetails, buildInsertStatements, buildInsertStatementsForPublish } from '../project/project.helper';
+import { PubService } from './pub-service';
 
 export class SubService {
     private sessionId: any;
@@ -70,57 +71,90 @@ export class SubService {
         if (typeof payload.Data__c === 'string') {
             data = JSON.parse(data);
         }
-        if (data.Projects !== null) {
-            records = data.Projects;
-            records = records.map((self) => {
-                self = formatProjectDetails(self);
-                const externalId = self['external_id'];
-                self['external_id'] = self['id'];
-                self['id'] = payload.Action__c === 'update' ? +externalId : undefined;
-                return self;
-            });
-        } else if (data.ProjectTasks !== null) {
-            records = data.ProjectTasks;
-            records = records.map((self) => {
-                self = formatTaskDetails(self);
-                const externalId = self['external_id'];
-                self['external_id'] = self['id'];
-                self['id'] = payload.Action__c === 'update' ? +externalId : undefined;
-                return self;
-            });
-            isProjectRequest = false;
-        }
-
-        if (records && records.length > 0) {
-            if (payload.Action__c === 'update') {
-                const queryConfigArray = [];
-                records.forEach((task) => {
-                    const queryConfig = buildUpdateStatements(task, isProjectRequest);
-                    queryConfigArray.push(queryConfig);
-                });
-
-                this.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
-                    console.log(error, results);
-                    if (!error) {
-                        console.log("Updated to the database from Subscribe (SPE).");
+        this.projectModel.getProjectExternalIdMap((projectMap) => {
+            if (data.Projects !== null) {
+                records = data.Projects;
+                records = records.map((self) => {
+                    self = formatProjectDetails(self);
+                    const externalId = self['external_id'];
+                    self['external_id'] = self['id'];
+                    if (payload.Action__c === 'update') {
+                        self['id'] = externalId;
+                    } else {
+                        delete self['id'];
                     }
+                    return self;
                 });
-            } else {
-                // Insert here
-                // const queryConfig = buildInsertStatements(records, ['_id', 'external_id'], isProjectRequest);
-                // // const queryConfigArray = [];
-                // // records.forEach((task) => {
-                // //     queryConfigArray.push(queryConfig);
-                // // });
+            } else if (data.ProjectTasks !== null) {
+                records = data.ProjectTasks;
 
-                // this.projectModel.insertManyStatements(queryConfig, (error, results) => {
-                //     console.log(error, results);
-                //     if (!error) {
-                //         console.log("Inserted to the database from Subscribe (SPE).");
-                //     }
-                // });
+                records = records.map((self) => {
+                    self = formatTaskDetails(self);
+                    const externalId = self['external_id'];
+                    self['external_id'] = self['id'];
+                    if (payload.Action__c === 'update') {
+                        self['id'] = externalId;
+                    } else {
+                        delete self['id'];
+                    }
+                    self['project_ref_id'] = projectMap.find((p) => p.external_id === self['project_ref_id'])._id;
+
+                    // this.projectModel.getProjectIdByExternalId(self['project_ref_id'], (projectId) => {
+                    //     self['project_ref_id'] = projectId;
+                    // });
+                    return self;
+                });
+                isProjectRequest = false;
             }
-        }
+
+            if (records && records.length > 0) {
+                if (payload.Action__c === 'update') {
+                    const queryConfigArray = [];
+                    records.forEach((task) => {
+                        const queryConfig = buildUpdateStatements(task, isProjectRequest);
+                        queryConfigArray.push(queryConfig);
+                    });
+
+                    this.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
+                        console.log(error, results);
+                        if (!error) {
+                            console.log("Updated to the database from Subscribe (SPE).");
+                        }
+                    });
+                } else {
+                    // Insert here
+                    const queryConfig = buildInsertStatementsForPublish(records, ['_id', 'external_id'], isProjectRequest);
+                    // const queryConfigArray = [];
+                    // records.forEach((task) => {
+                    //     queryConfigArray.push(queryConfig);
+                    // });
+
+                    this.projectModel.insertManyStatements(queryConfig, (error, results) => {
+                        console.log(error, results);
+                        if (!error) {
+                            console.log("Inserted to the database from Subscribe (SPE).");
+                            if (results.rows && results.rows.length > 0) {
+                                const pubservice = new PubService();
+                                results.rows.forEach((r) => {
+                                    r['id'] = r.external_id;
+                                    r['external_id__c'] = r._id;
+                                    delete r._id;
+                                    delete r.external_id;
+                                });
+                                let pubData = null;
+                                if (isProjectRequest) {
+                                    pubData = JSON.stringify({ Projects: results.rows });
+                                } else {
+                                    pubData = JSON.stringify({ ProjectTasks: results.rows });
+                                }
+                                pubservice.publish(userId, pubData);
+                                console.log("Published External ids to salesforce");
+                            }
+                        }
+                    });
+                }
+            }
+        });
     }
     private authenticateAndRun(orgConfig: IOrgMaster, callback: (error: any, response: request.Response) => void) {
         const serviceUserAuthConfig = {

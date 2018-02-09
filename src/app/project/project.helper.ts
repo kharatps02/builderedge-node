@@ -120,7 +120,72 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
         values: params,
     };
 }
+export function buildInsertStatementsForPublish(rows, returnFieldArr = [], isProjectRequest: boolean = true) {
+    const params = [];
+    const chunks = [];
+    const valueStr = '';
+    let insertQueryStr = '';
+    let returning = '';
 
+    insertQueryStr = "INSERT INTO PROJECTS ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at ) VALUES ";
+
+    if (!isProjectRequest) {
+        insertQueryStr = "INSERT INTO project_tasks ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, project_ref_id ) VALUES ";
+    }
+
+    if (returnFieldArr.length !== 0) {
+        returning = ' RETURNING ' + returnFieldArr.toString();
+    }
+
+    rows.forEach((row) => {
+        const valueClause = [];
+
+        params.push(row.external_id);
+        valueClause.push('$' + params.length);
+
+        params.push(row.name);
+        valueClause.push('$' + params.length);
+
+        params.push(row.description);
+        valueClause.push('$' + params.length);
+
+        params.push(row.start_date);
+        valueClause.push('$' + params.length);
+
+        params.push(row.end_date);
+        valueClause.push('$' + params.length);
+
+        params.push(row.completion_per);
+        valueClause.push('$' + params.length);
+
+        params.push(row.status);
+        valueClause.push('$' + params.length);
+
+        params.push(row.created_by);
+        valueClause.push('$' + params.length);
+
+        params.push(row.updated_by);
+        valueClause.push('$' + params.length);
+
+        params.push(row.created_at);
+        valueClause.push('$' + params.length);
+
+        params.push(row.updated_at);
+        valueClause.push('$' + params.length);
+
+        if (!isProjectRequest) {
+            params.push(row.project_ref_id);
+            valueClause.push('$' + params.length);
+        }
+
+        chunks.push('(' + valueClause.join(', ') + ')');
+    });
+
+    return {
+        text: insertQueryStr + chunks.join(', ') + returning,
+        values: params,
+    };
+}
 export function formatSalesForceObject(params) {
 
     const record = {};

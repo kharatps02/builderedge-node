@@ -1,4 +1,4 @@
-import { Client } from 'pg';
+import { Client, QueryResult } from 'pg';
 import { error } from 'util';
 import * as async from 'async';
 
@@ -46,6 +46,28 @@ export class ProjectModel {
         pgClient.query(queryObj, (err, results) => {
             pgClient.end();
             callback(err, results);
+        });
+    }
+    /**
+     * getProjectExternalIdMap
+     */
+    public getProjectExternalIdMap(callback: (projectId: any[]) => void) {
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+        pgClient.connect();
+        pgClient.query('SELECT _id, external_id from projects', (err, results) => {
+            pgClient.end();
+            callback(results.rows);
+        });
+    }
+    /**
+     * getProjectId
+     */
+    public getProjectIdByExternalId(externalId: string, callback: (projectId) => void) {
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+        pgClient.connect();
+        pgClient.query('SELECT _id from projects WHERE external_id = $1', [externalId], (err, results) => {
+            pgClient.end();
+            callback(results[0]);
         });
     }
 }
