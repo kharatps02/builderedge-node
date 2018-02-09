@@ -1,6 +1,9 @@
 import * as express from 'express';
 import { ProjectController } from './project.controller';
 import { Authentication } from '../../core/authentication/authentication';
+/**
+ * @description Project routs configuration.
+ */
 export class ProjectRoutes {
     private routers: express.Router;
     private projectController: ProjectController;

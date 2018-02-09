@@ -3,27 +3,16 @@ import { CometD } from "cometd";
 import * as nforce from "nforce";
 import { Constants } from "../../config/constants";
 import * as request from 'request';
-
+/**
+ * @description Publish service can be used to publish data to salesforce.
+ */
 export class PubService {
     private orgMasterModel: OrgMasterModel;
 
     constructor() {
         this.orgMasterModel = new OrgMasterModel();
-
     }
-    // /**
-    //  * @description publish via cometD
-    //  */
-    // public publish(channel: string, data: any, callback?: (publishAck?: any) => void) {
-    //     this.client.publish(channel, data, (publishAck) => {
-    //         if (publishAck.successful) {
-    //             // The message reached the server
-    //             if (callback) {
-    //                 callback(publishAck);
-    //             }
-    //         }
-    //     });
-    // }
+
     private getUserOrgConfig(userId: string, callback: (orgUserDetails: IOrgMaster) => void) {
         return this.orgMasterModel.getUserOrgDetails(userId, (error1, results) => {
             if (error1) {
@@ -34,6 +23,12 @@ export class PubService {
             }
         });
     }
+    /**
+     *
+     * @param userId User id
+     * @param data Data to be published
+     * @param callback callback
+     */
     public publish(userId: string, data: any, callback?: (error, eventResponse) => void) {
         this.getUserOrgConfig(userId, (userOrgDetails) => {
 
