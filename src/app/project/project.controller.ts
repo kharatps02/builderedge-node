@@ -105,30 +105,31 @@ export class ProjectController {
                     const queryConfig = buildUpdateStatements(task, isProjectRequest);
                     queryConfigArray.push(queryConfig);
                 });
-                that.preparedRequestAndUpdateSalesforceDBPOC2(userId, records, isProjectRequest, (error, eventResponse) => {
-                    if (error) {
-                        res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
-                    } else {
-                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
-                    }
-                });
+                // The code below will update the salesforce first. Database will be updated after node.js recevies event subscription.
+                // that.preparedRequestAndUpdateSalesforceDBPOC2(userId, records, isProjectRequest, (error, eventResponse) => {
+                //     if (error) {
+                //         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                //     } else {
+                //         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
+                //     }
+                // });
                 // The code below will update the database first and then publish it to salesforce.
                 // Since salesforce has triggers on the object, the data comes back to the Node.js subscription
                 // It causes unnecessary updates.
                 // Uncomment if you want to update the database first.
-                // that.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
-                //     console.log(error, results);
-                //     if (!error) {
-                //         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
+                that.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
+                    console.log(error, results);
+                    if (!error) {
+                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
 
-                //         // Update salesforce data
-                //         if (results && results.length > 0) {
-                //             that.preparedRequestAndUpdateSalesforceDBPOC2.call(that, userId, records, isProjectRequest);
-                //         }
-                //     } else {
-                //         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
-                //     }
-                // });
+                        // Update salesforce data
+                        if (results && results.length > 0) {
+                            that.preparedRequestAndUpdateSalesforceDBPOC2.call(that, userId, records, isProjectRequest);
+                        }
+                    } else {
+                        res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                    }
+                });
             } else {
                 res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
             }
