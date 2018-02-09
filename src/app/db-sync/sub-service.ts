@@ -5,7 +5,7 @@ import * as cometDNode from 'cometd-nodejs-client';
 import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
 import { ProjectModel } from '../project/project.model';
 import { ProjectController } from '../project/project.controller';
-import { buildUpdateStatements, formatProjectDetails, formatTaskDetails } from '../project/project.helper';
+import { buildUpdateStatements, formatProjectDetails, formatTaskDetails, buildInsertStatements } from '../project/project.helper';
 
 export class SubService {
     private sessionId: any;
@@ -36,7 +36,7 @@ export class SubService {
             // Configure the CometD object.
             this.cometd.configure({
                 url: orgConfig.event_endpoint_url,
-                logLevel: 'debug',
+                logLevel: Constants.COMETD.LOG_MODE,
                 requestHeaders: { Authorization: 'OAuth ' + this.sessionId },
             });
 
@@ -76,7 +76,7 @@ export class SubService {
                 self = formatProjectDetails(self);
                 const externalId = self['external_id'];
                 self['external_id'] = self['id'];
-                self['id'] = externalId;
+                self['id'] = payload.Action__c === 'update' ? +externalId : undefined;
                 return self;
             });
         } else if (data.ProjectTasks !== null) {
@@ -85,7 +85,7 @@ export class SubService {
                 self = formatTaskDetails(self);
                 const externalId = self['external_id'];
                 self['external_id'] = self['id'];
-                self['id'] = externalId;
+                self['id'] = payload.Action__c === 'update' ? +externalId : undefined;
                 return self;
             });
             isProjectRequest = false;
@@ -102,10 +102,23 @@ export class SubService {
                 this.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
                     console.log(error, results);
                     if (!error) {
+                        console.log("Updated to the database from Subscribe (SPE).");
                     }
                 });
             } else {
                 // Insert here
+                // const queryConfig = buildInsertStatements(records, ['_id', 'external_id'], isProjectRequest);
+                // // const queryConfigArray = [];
+                // // records.forEach((task) => {
+                // //     queryConfigArray.push(queryConfig);
+                // // });
+
+                // this.projectModel.insertManyStatements(queryConfig, (error, results) => {
+                //     console.log(error, results);
+                //     if (!error) {
+                //         console.log("Inserted to the database from Subscribe (SPE).");
+                //     }
+                // });
             }
         }
     }
@@ -125,7 +138,7 @@ export class SubService {
 
         console.log('In postRequestOnSalesforce requestObj - ', requestObj);
         return request.post(requestObj, (error, response) => {
-            console.log('In postRequestOnSalesforce', error, response.body);
+            console.log('In postRequestOnSalesforce', error, response || response.body);
             if (callback) {
                 callback(error, response);
             }

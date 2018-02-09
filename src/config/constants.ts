@@ -15,6 +15,15 @@ export namespace Constants {
         SOMETHING_WENT_WRONG: 'something went wrong',
         INVALID_REQUEST_PARAMS: 'Invalid request params',
     };
+    export enum COMETD_LOG_MODES {
+        ERROR = 'error',
+        INFO = 'info',
+        WARNING = 'warn',
+        DEBUG = 'debug',
+    }
+    export const COMETD = {
+        LOG_MODE: COMETD_LOG_MODES.ERROR,
+    };
     export const SALESFORCE_PLATFORM_EVENTS_CONFIG = {
         URL: 'https://ap5.salesforce.com/cometd/40.0/',
         EVENT: '/event/ProjectTaskService__e',
@@ -35,7 +44,8 @@ export namespace Constants {
             grant_type: "refresh_token",
             client_id: "3MVG9d8..z.hDcPJvS1kmRShyWMlrH2GkDXefwC.1dAylEi0bWd3yh6Q7xOlp3_9Ex9XAj_MJBiHPbtQ7YwKu",
             client_secret: "6637042274278747657",
-            refresh_token: "5Aep8613hy0tHCYdhwe9FB19lxxsD1U4lzJJTGz11pm4z6GL6nOSvZIW56wdCiEJIztVCqniYXkzYwCdkz2nfXY",
+            // Obtain it from the database.
+            // refresh_token: "5Aep8613hy0tHCYdhwe9FB19lxxsD1U4lzJJTGz11pm4z6GL6nOSvZIW56wdCiEJIztVCqniYXkzYwCdkz2nfXY",
         },
     };
 }
