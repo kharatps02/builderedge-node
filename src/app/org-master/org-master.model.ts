@@ -34,7 +34,7 @@ export class OrgMasterModel {
     public getOrgConfigByUserId(userId: string, callback: (error: Error, config: IOrgMaster) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        const queryString = 'SELECT * FROM ORG_MASTER WHERE USER_ID=$1';
+        const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like USER_ID || '%'";
         const orgConfigMap = new Map<string, any>();
         pgClient.query(queryString, [userId], (error1, results) => {
             pgClient.end();
