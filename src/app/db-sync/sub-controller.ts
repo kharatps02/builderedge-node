@@ -17,7 +17,7 @@ export class SubController {
             }
             results.forEach((org) => {
                 // if (org.org_id === '00D7F000005A6tn') {
-                this.subscribers[org.org_id] = new SubService(org);
+                this.subscribers[org.user_id] = new SubService(org);
                 // }
             });
         });

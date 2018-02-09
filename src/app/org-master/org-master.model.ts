@@ -6,11 +6,23 @@ export class OrgMasterModel {
     constructor() {
 
     }
+    public getUserOrgDetails(userId: string, callback: (error: Error, results: IOrgMaster[]) => void) {
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+        pgClient.connect();
+        const queryString = "SELECT  * FROM ORG_MASTER WHERE $1 like user_id || '%'";
+        // const queryString = 'SELECT DISTINCT ON (org_id) * FROM ORG_MASTER';
+        const orgConfigMap = new Map<string, any>();
 
+        pgClient.query(queryString, [userId], (error1, results) => {
+            pgClient.end();
+            callback(error1, results.rows);
+        });
+    }
     public getAllOrgDetails(callback: (error: Error, results: IOrgMaster[]) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        const queryString = 'SELECT DISTINCT ON (org_id) * FROM ORG_MASTER';
+        const queryString = 'SELECT DISTINCT ON (user_id) * FROM ORG_MASTER';
+        // const queryString = 'SELECT DISTINCT ON (org_id) * FROM ORG_MASTER';
         const orgConfigMap = new Map<string, any>();
 
         pgClient.query(queryString, (error1, results) => {
