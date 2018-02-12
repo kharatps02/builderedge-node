@@ -1,12 +1,19 @@
 import { Client } from 'pg';
 import { Constants } from '../../config/constants';
 import { error } from 'util';
+
+/**
+ * @description Handles all database functions for OrgMaster table
+ */
 export class OrgMasterModel {
 
     constructor() {
 
     }
-
+    /**
+     * @description Gets the details of all the registered orgs.
+     * @param callback callback function
+     */
     public getAllOrgDetails(callback: (error: Error, results: IOrgMaster[]) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();

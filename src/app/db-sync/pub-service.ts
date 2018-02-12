@@ -3,6 +3,7 @@ import { CometD } from "cometd";
 import * as nforce from "nforce";
 import { Constants } from "../../config/constants";
 import * as request from 'request';
+
 /**
  * @description Publish service can be used to publish data to salesforce.
  */
@@ -12,7 +13,11 @@ export class PubService {
     constructor() {
         this.orgMasterModel = new OrgMasterModel();
     }
-
+    /**
+     * @description Gets Org config for the given org Id.
+     * @param orgId Org Id of the Org to fetch config of.
+     * @param callback Callback
+     */
     private getUserOrgConfig(orgId: string, callback: (orgUserDetails: IOrgMaster) => void) {
         return this.orgMasterModel.getOrgConfigByOrgId(orgId, (error1, result) => {
             if (error1) {
@@ -25,6 +30,7 @@ export class PubService {
     }
     /**
      *
+     * @description Publishes the data to the Salesforce Platform Event.
      * @param orgId Org id
      * @param data Data to be published
      * @param callback callback
@@ -35,12 +41,12 @@ export class PubService {
             const org = nforce.createConnection({
                 clientId: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_id,
                 clientSecret: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_secret,
-                redirectUri: 'https://www.google.co.in/',
+                redirectUri: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.redirectUri,
                 // redirectUri: 'http://localhost:3000/oauth/_callback',
-                apiVersion: 'v40.0',  // optional, defaults to current salesforce API version
-                environment: 'production',  // optional, salesforce 'sandbox' or 'production', production default
-                mode: 'single', // optional, 'single' or 'multi' user mode, multi default
-                grant_type: "refresh_token",
+                apiVersion: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.API_VERSION,  // optional, defaults to current salesforce API version
+                environment: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.ENV,  // optional, salesforce 'sandbox' or 'production', production default
+                mode: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.MODE, // optional, 'single' or 'multi' user mode, multi default
+                grant_type: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.grant_type,
                 refresh_token: userOrgDetails.refresh_token,
             });
 
@@ -71,14 +77,15 @@ export class PubService {
             refresh_token: orgConfig.refresh_token,
         };
         const requestObj = {
-            url: 'https://ap5.salesforce.com/services/oauth2/token',
+            url: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.url,
             qs: serviceUserAuthConfig,
-            method: 'POST',
+            method: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.method,
             json: true,
         };
-        console.log('In postRequestOnSalesforce requestObj - ', requestObj);
         return request.post(requestObj, (error, response) => {
-            console.log('In postRequestOnSalesforce', error, response.body);
+            if (error) {
+                console.error('In postRequestOnSalesforce', error);
+            }
             if (callback) {
                 callback(error, response);
             }

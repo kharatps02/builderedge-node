@@ -31,14 +31,21 @@ export namespace Constants {
      * Platform events configuration along with OAUTH config.
      */
     export const SALESFORCE_PLATFORM_EVENTS_CONFIG = {
+        DATA_OBJ_KEY: process.env.SPE_DATA_OBJ_KEY || 'Data__c',
         URL: process.env.SPE_URL || 'https://ap5.salesforce.com/cometd/40.0/',
         EVENT: `/event/${process.env.SPE_EVENT || 'ProjectTaskService__e'}`,
         EVENT_NAME: process.env.SPE_EVENT || 'ProjectTaskService__e',
+        API_VERSION: process.env.SPE_VERSION || 'v40.0',
+        MODE: process.env.SPE_MODE || 'single',
+        ENV: process.env.SPE_ENV || 'production',
         OAUTH: {
             url: process.env.SPE_OAUTH_URL || 'https://ap5.salesforce.com/services/oauth2/token',
             grant_type: process.env.SPE_OAUTH_GRANT_TYPE || "refresh_token",
             client_id: process.env.SPE_OAUTH_CLIENT_ID || "3MVG9d8..z.hDcPJvS1kmRShyWMlrH2GkDXefwC.1dAylEi0bWd3yh6Q7xOlp3_9Ex9XAj_MJBiHPbtQ7YwKu",
             client_secret: process.env.SPE_OAUTH_CLIENT_SECRET || "6637042274278747657",
+            // This URI was set at Salesforce OAuth Configuration
+            redirectUri: process.env.SPE_OAUTH_REDIRECT_URI || 'https://www.google.co.in/',
+            method: process.env.SPE_OAUTH_METHOD || 'POST',
         },
     };
 }

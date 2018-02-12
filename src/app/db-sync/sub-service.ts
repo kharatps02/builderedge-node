@@ -124,10 +124,6 @@ export class SubService {
                 } else {
                     // Insert here
                     const queryConfig = buildInsertStatementsForPublish(records, ['_id', 'external_id'], isProjectRequest);
-                    // const queryConfigArray = [];
-                    // records.forEach((task) => {
-                    //     queryConfigArray.push(queryConfig);
-                    // });
 
                     this.projectModel.insertManyStatements(queryConfig, (error, results) => {
                         console.log(error, results);
