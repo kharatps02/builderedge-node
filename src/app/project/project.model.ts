@@ -23,7 +23,7 @@ export class ProjectModel {
         });
     }
 
-    public updateProjectsOrTasks(projectTaskQueryArray: any[], isProject = true, callback: (error: Error, results: any) => void) {
+    public updateProjectsOrTasks(projectTaskQueryArray: any[], callback: (error: Error, results: any) => void) {
         const asyncTasks = [];
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
@@ -48,6 +48,7 @@ export class ProjectModel {
             callback(err, results);
         });
     }
+
     /**
      * getProjectExternalIdMap
      */
@@ -59,6 +60,7 @@ export class ProjectModel {
             callback(results.rows);
         });
     }
+
     /**
      * getProjectId
      */
