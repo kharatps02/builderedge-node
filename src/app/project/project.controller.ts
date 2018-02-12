@@ -31,7 +31,7 @@ export class ProjectController {
                 const orgId = req.body.org_id;
                 this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config: IOrgMaster) => {
                     if (!error && config) {
-                        request(config.api_base_url + '/services/apexrest/ProductSerivce', requestHeader, (error1, response) => {
+                        request(config.api_base_url + '/services/apexrest/ProductService', requestHeader, (error1, response) => {
                             if (!error1) {
                                 if (response.statusCode === 401) {
                                     res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: response.body[0].message });
