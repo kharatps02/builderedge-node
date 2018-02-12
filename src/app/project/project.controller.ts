@@ -66,41 +66,44 @@ export class ProjectController {
         }
     }
 
-    public updateProject(req: express.Request, res: express.Response, next: express.NextFunction) {
-        this.updateProjectOrTask(req, res, true);
-    }
-
-    public updateTask(req: express.Request, res: express.Response, next: express.NextFunction) {
-        this.updateProjectOrTask(req, res, false);
-    }
-
     /**
      * @description Function to updates Projects or Tasks
      * @param req
      * @param res
      * @param isProjectRequest
      */
-    public updateProjectOrTask(req: express.Request, res: express.Response, isProjectRequest: boolean) {
+    public updateProjectOrTask(req: express.Request, res: express.Response) {
         try {
             const sessionId = req.body.session_id;
             const orgId = req.body.org_id;
             if (sessionId && orgId) {
                 const that = this;
                 const asyncTasks = [];
-                const records = req.body.records;
+                const data = req.body.Data__c;
                 const queryConfigArray = [];
-                records.forEach((task) => {
-                    const queryConfig = buildUpdateStatements(task, isProjectRequest);
-                    queryConfigArray.push(queryConfig);
-                });
-                that.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
+
+                if (data.Projects && data.Projects.length > 0) {
+                    data.Projects.forEach((project) => {
+                        const queryConfig = buildUpdateStatements(project, true);
+                        queryConfigArray.push(queryConfig);
+                    });
+                }
+
+                if (data.ProjectTasks && data.ProjectTasks.length > 0) {
+                    data.ProjectTasks.forEach((task) => {
+                        const queryConfig = buildUpdateStatements(task, false);
+                        queryConfigArray.push(queryConfig);
+                    });
+                }
+
+                that.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
                     console.log(error, results);
                     if (!error) {
                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
 
                         // Update salesforce data
                         if (results && results.length > 0) {
-                            that.preparedRequestAndUpdateSalesforceDB.call(that, { org_id: orgId, session_id: sessionId }, records, isProjectRequest);
+                            that.updateProjectsOrTasksOnSalesforce.call(that, { org_id: orgId, session_id: sessionId }, data);
                         }
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
@@ -114,22 +117,21 @@ export class ProjectController {
         }
     }
 
-    public preparedRequestAndUpdateSalesforceDB(params: { org_id: string, session_id: string }, results: any[], isProjectRequest: boolean) {
-        const data = { ProjectTasks: [], Projects: [] };
-        if (isProjectRequest) {
-            results.forEach((row) => {
-                data.Projects.push(formatSalesForceObject(row));
-            });
-        } else {
-            results.forEach((row) => {
-                data.ProjectTasks.push(formatSalesForceObject(row));
+    public updateProjectsOrTasksOnSalesforce(params: { org_id: string, session_id: string }, data: { ProjectTasks: IProjectDetails[], Projects: IProjectDetails[] }) {
+        const requestData = { ProjectTasks: [], Projects: [] };
+        if (data.Projects && data.Projects.length > 0) {
+            data.Projects.forEach((row) => {
+                requestData.Projects.push(formatSalesForceObject(row));
             });
         }
-        const requestData = {
-            Data__c: JSON.stringify(data),
-        };
+        if (data.ProjectTasks && data.ProjectTasks.length > 0) {
+            data.ProjectTasks.forEach((row) => {
+                requestData.ProjectTasks.push(formatSalesForceObject(row));
+            });
+        }
+
         if (params.session_id) {
-            this.postRequestOnSalesforce(params, requestData);
+            this.postRequestOnSalesforce(params, { Data__c: JSON.stringify(requestData) });
         }
     }
 
@@ -164,7 +166,7 @@ export class ProjectController {
     }
 
     /**
-     * @description Insert all project and tasks into postgres database and 
+     * @description Insert all project and tasks into postgres database and
      * call salesforce endpoints to updates salesforce record external_id with postgres record id
      * @param params
      * @param salesforceResponseArray
@@ -289,7 +291,7 @@ export class ProjectController {
                 // Since salesforce has triggers on the object, the data comes back to the Node.js subscription
                 // It causes unnecessary updates.
                 // Uncomment if you want to update the database first.
-                that.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
+                that.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
                     console.log(error, results);
                     if (!error) {
                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
