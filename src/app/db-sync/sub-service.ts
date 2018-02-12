@@ -13,13 +13,11 @@ export class SubService {
     private cometd: any;
     private orgMasterModel: OrgMasterModel;
     private projectModel: ProjectModel;
-    //     private projectController: ProjectController;
     constructor(orgConfig: IOrgMaster) {
         cometDNode.adapt();
         this.cometd = new lib.CometD(orgConfig.org_id);
         this.orgMasterModel = new OrgMasterModel();
         this.projectModel = new ProjectModel();
-        // this.projectController = new ProjectController();
         this.config(orgConfig);
     }
 

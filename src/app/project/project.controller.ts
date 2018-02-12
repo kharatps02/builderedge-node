@@ -53,7 +53,7 @@ export class ProjectController {
                 };
                 const orgId = req.body.org_id;
                 this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config: IOrgMaster) => {
-                    if (!error) {
+                    if (!error && config) {
                         request(config.api_base_url + '/services/apexrest/ProductSerivce', requestHeader, (error1, response) => {
                             if (!error1) {
                                 if (response.statusCode === 401) {
@@ -229,7 +229,7 @@ export class ProjectController {
     // Following function sent post request on salesforce endpoints
     public postRequestOnSalesforce(params: { org_id: string, session_id: string }, data, callback?: (error: Error, results: any) => void) {
         this.orgMasterModel.getOrgConfigByOrgId(params.org_id, (error, config: IOrgMaster) => {
-            if (!error) {
+            if (!error && config) {
                 const requestObj = {
                     url: config.api_base_url + '/services/data/v40.0/sobjects/ProjectTaskService__e',
                     headers: {
