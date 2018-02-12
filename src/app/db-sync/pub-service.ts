@@ -13,24 +13,24 @@ export class PubService {
         this.orgMasterModel = new OrgMasterModel();
     }
 
-    private getUserOrgConfig(userId: string, callback: (orgUserDetails: IOrgMaster) => void) {
-        return this.orgMasterModel.getUserOrgDetails(userId, (error1, results) => {
+    private getUserOrgConfig(orgId: string, callback: (orgUserDetails: IOrgMaster) => void) {
+        return this.orgMasterModel.getOrgConfigByOrgId(orgId, (error1, result) => {
             if (error1) {
                 return;
             }
-            if (results && results.length === 1 && callback) {
-                callback(results[0]);
+            if (result && callback) {
+                callback(result);
             }
         });
     }
     /**
      *
-     * @param userId User id
+     * @param orgId Org id
      * @param data Data to be published
      * @param callback callback
      */
-    public publish(userId: string, data: any, callback?: (error, eventResponse) => void) {
-        this.getUserOrgConfig(userId, (userOrgDetails) => {
+    public publish(orgId: string, data: any, callback?: (error, eventResponse) => void) {
+        this.getUserOrgConfig(orgId, (userOrgDetails) => {
 
             const org = nforce.createConnection({
                 clientId: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_id,

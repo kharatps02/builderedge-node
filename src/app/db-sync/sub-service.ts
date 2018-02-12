@@ -66,7 +66,7 @@ export class SubService {
         let isProjectRequest = true;
         let records = [];
         let data = payload.Data__c;
-        const userId = payload.User__c;
+        const orgId = payload.OrgId__c;
 
         if (typeof payload.Data__c === 'string') {
             data = JSON.parse(data);
@@ -147,7 +147,7 @@ export class SubService {
                                 } else {
                                     pubData = JSON.stringify({ ProjectTasks: results.rows });
                                 }
-                                pubservice.publish(userId, pubData);
+                                pubservice.publish(orgId, pubData);
                                 console.log("Published External ids to salesforce");
                             }
                         }

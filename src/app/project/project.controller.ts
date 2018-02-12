@@ -43,7 +43,7 @@ export class ProjectController {
     public getalldetails(req: express.Request, res: express.Response, next: express.NextFunction) {
         const that = this;
         try {
-            if (req.body.session_id && req.body.user_id) {
+            if (req.body.session_id && req.body.org_id) {
                 // Get project details from salesforce api
                 const requestHeader = {
                     headers: {
@@ -51,8 +51,8 @@ export class ProjectController {
                         'Content-Type': 'application/json',
                     },
                 };
-                const user_id = req.body.user_id;
-                this.orgMasterModel.getOrgConfigByUserId(user_id, (error, config: IOrgMaster) => {
+                const orgId = req.body.org_id;
+                this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config: IOrgMaster) => {
                     if (!error) {
                         request(config.api_base_url + '/services/apexrest/ProductSerivce', requestHeader, (error1, response) => {
                             if (!error1) {
@@ -95,8 +95,8 @@ export class ProjectController {
 
     public updateProjectOrTaskPOC2(req: express.Request, res: express.Response, isProjectRequest: boolean) {
         try {
-            const userId = req.body.user_id;
-            if (userId) {
+            const orgId = req.body.org_id;
+            if (orgId) {
                 const that = this;
                 const asyncTasks = [];
                 const records = req.body.records;
@@ -106,7 +106,7 @@ export class ProjectController {
                     queryConfigArray.push(queryConfig);
                 });
                 // The code below will update the salesforce first. Database will be updated after node.js recevies event subscription.
-                // that.preparedRequestAndUpdateSalesforceDBPOC2(userId, records, isProjectRequest, (error, eventResponse) => {
+                // that.preparedRequestAndUpdateSalesforceDBPOC2(orgId, records, isProjectRequest, (error, eventResponse) => {
                 //     if (error) {
                 //         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
                 //     } else {
@@ -124,7 +124,7 @@ export class ProjectController {
 
                         // Update salesforce data
                         if (results && results.length > 0) {
-                            that.preparedRequestAndUpdateSalesforceDBPOC2.call(that, userId, records, isProjectRequest);
+                            that.preparedRequestAndUpdateSalesforceDBPOC2.call(that, orgId, records, isProjectRequest);
                         }
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
@@ -138,7 +138,7 @@ export class ProjectController {
         }
     }
 
-    public preparedRequestAndUpdateSalesforceDBPOC2(userId: string, results: any[], isProjectRequest: boolean, callback: (error, eventResponse) => void) {
+    public preparedRequestAndUpdateSalesforceDBPOC2(orgId: string, results: any[], isProjectRequest: boolean, callback: (error, eventResponse) => void) {
         const data = { ProjectTasks: [], Projects: [] };
         if (isProjectRequest) {
             results.forEach((row) => {
@@ -152,9 +152,9 @@ export class ProjectController {
         // const requestData = {
         //     Data__c: JSON.stringify(data),
         // };
-        if (userId) {
+        if (orgId) {
             const pubService = new PubService();
-            pubService.publish(userId, JSON.stringify(data), (error, eventResponse) => {
+            pubService.publish(orgId, JSON.stringify(data), (error, eventResponse) => {
                 console.log("Updat to salesforce result: ", eventResponse);
                 if (callback) {
                     callback(error, eventResponse);
@@ -176,8 +176,8 @@ export class ProjectController {
     public updateProjectOrTask(req: express.Request, res: express.Response, isProjectRequest: boolean) {
         try {
             const sessionId = req.body.session_id;
-            const userId = req.body.user_id;
-            if (sessionId && userId) {
+            const orgId = req.body.org_id;
+            if (sessionId && orgId) {
                 const that = this;
                 const asyncTasks = [];
                 const records = req.body.records;
@@ -193,7 +193,7 @@ export class ProjectController {
 
                         // Update salesforce data
                         if (results && results.length > 0) {
-                            that.preparedRequestAndUpdateSalesforceDB.call(that, { user_id: userId, session_id: sessionId }, records, isProjectRequest);
+                            that.preparedRequestAndUpdateSalesforceDB.call(that, { org_id: orgId, session_id: sessionId }, records, isProjectRequest);
                         }
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
@@ -207,7 +207,7 @@ export class ProjectController {
         }
     }
 
-    public preparedRequestAndUpdateSalesforceDB(params: { user_id: string, session_id: string }, results: any[], isProjectRequest: boolean) {
+    public preparedRequestAndUpdateSalesforceDB(params: { org_id: string, session_id: string }, results: any[], isProjectRequest: boolean) {
         const data = { ProjectTasks: [], Projects: [] };
         if (isProjectRequest) {
             results.forEach((row) => {
@@ -227,8 +227,8 @@ export class ProjectController {
     }
 
     // Following function sent post request on salesforce endpoints
-    public postRequestOnSalesforce(params: { user_id: string, session_id: string }, data, callback?: (error: Error, results: any) => void) {
-        this.orgMasterModel.getOrgConfigByUserId(params.user_id, (error, config: IOrgMaster) => {
+    public postRequestOnSalesforce(params: { org_id: string, session_id: string }, data, callback?: (error: Error, results: any) => void) {
+        this.orgMasterModel.getOrgConfigByOrgId(params.org_id, (error, config: IOrgMaster) => {
             if (!error) {
                 const requestObj = {
                     url: config.api_base_url + '/services/data/v40.0/sobjects/ProjectTaskService__e',
@@ -253,7 +253,7 @@ export class ProjectController {
     //#endregion
     // Following function  insert all project and tasks into postgres database and
     //  call salesforce endpoints to updates salesforce record external_id with postgres record id
-    public syncSalesforceUserDetails(params: { user_id: string, session_id: string }, salesforceResponseArray) {
+    public syncSalesforceUserDetails(params: { org_id: string, session_id: string }, salesforceResponseArray) {
         const that = this;
         try {
             let projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
