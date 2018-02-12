@@ -16,30 +16,7 @@ export class ProjectController {
         this.orgMasterModel = new OrgMasterModel();
     }
 
-    public create(req: express.Request, res: express.Response, next: express.NextFunction) {
-        let reqParams: IProjectRequest;
-        try {
-            reqParams = {
-                name: req.body.name,
-                start_date: req.body.start_date,
-                end_date: req.body.end_date,
-                completion_per: req.body.completion_per,
-                created_by: req.body.created_by,
-                updated_by: req.body.created_by,
-            };
-
-            this.projectModel.create(reqParams, (error, response) => {
-                if (!error) {
-                    res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.SAVED, results: response });
-                } else {
-                    res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
-                }
-            });
-        } catch (e) {
-            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
-        }
-    }
-
+    //#region POC1
     public getalldetails(req: express.Request, res: express.Response, next: express.NextFunction) {
         const that = this;
         try {
@@ -73,9 +50,11 @@ export class ProjectController {
                                     }
                                 }
                             } else {
-                                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error1 });
                             }
                         });
+                    } else {
+                        res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
                     }
                 });
             } else {
@@ -86,87 +65,7 @@ export class ProjectController {
             res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
     }
-    // #region POC2 Publish
-    public updateProjectPOC2(req: express.Request, res: express.Response, next: express.NextFunction) {
-        this.updateProjectOrTaskPOC2(req, res, true);
-    }
 
-    public updateTaskPOC2(req: express.Request, res: express.Response, next: express.NextFunction) {
-        this.updateProjectOrTaskPOC2(req, res, false);
-    }
-
-    public updateProjectOrTaskPOC2(req: express.Request, res: express.Response, isProjectRequest: boolean) {
-        try {
-            const orgId = req.body.org_id;
-            if (orgId) {
-                const that = this;
-                const asyncTasks = [];
-                const records = req.body.records;
-                const queryConfigArray = [];
-                records.forEach((task) => {
-                    const queryConfig = buildUpdateStatements(task, isProjectRequest);
-                    queryConfigArray.push(queryConfig);
-                });
-                // The code below will update the salesforce first. Database will be updated after node.js recevies event subscription.
-                // that.preparedRequestAndUpdateSalesforceDBPOC2(orgId, records, isProjectRequest, (error, eventResponse) => {
-                //     if (error) {
-                //         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
-                //     } else {
-                //         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
-                //     }
-                // });
-                // The code below will update the database first and then publish it to salesforce.
-                // Since salesforce has triggers on the object, the data comes back to the Node.js subscription
-                // It causes unnecessary updates.
-                // Uncomment if you want to update the database first.
-                that.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
-                    console.log(error, results);
-                    if (!error) {
-                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
-
-                        // Update salesforce data
-                        if (results && results.length > 0) {
-                            that.preparedRequestAndUpdateSalesforceDBPOC2.call(that, orgId, records, isProjectRequest);
-                        }
-                    } else {
-                        res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
-                    }
-                });
-            } else {
-                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
-            }
-        } catch (error) {
-            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
-        }
-    }
-
-    public preparedRequestAndUpdateSalesforceDBPOC2(orgId: string, results: any[], isProjectRequest: boolean, callback: (error, eventResponse) => void) {
-        const data = { ProjectTasks: [], Projects: [] };
-        if (isProjectRequest) {
-            results.forEach((row) => {
-                data.Projects.push(formatSalesForceObject(row));
-            });
-        } else {
-            results.forEach((row) => {
-                data.ProjectTasks.push(formatSalesForceObject(row));
-            });
-        }
-        // const requestData = {
-        //     Data__c: JSON.stringify(data),
-        // };
-        if (orgId) {
-            const pubService = new PubService();
-            pubService.publish(orgId, JSON.stringify(data), (error, eventResponse) => {
-                console.log("Updat to salesforce result: ", eventResponse);
-                if (callback) {
-                    callback(error, eventResponse);
-                }
-            });
-        }
-    }
-    // #endregion
-
-    //#region POC1
     public updateProject(req: express.Request, res: express.Response, next: express.NextFunction) {
         this.updateProjectOrTask(req, res, true);
     }
@@ -175,6 +74,12 @@ export class ProjectController {
         this.updateProjectOrTask(req, res, false);
     }
 
+    /**
+     * @description Function to updates Projects or Tasks
+     * @param req
+     * @param res
+     * @param isProjectRequest
+     */
     public updateProjectOrTask(req: express.Request, res: express.Response, isProjectRequest: boolean) {
         try {
             const sessionId = req.body.session_id;
@@ -228,7 +133,12 @@ export class ProjectController {
         }
     }
 
-    // Following function sent post request on salesforce endpoints
+    /**
+     * @description Sent post request on salesforce endpoints
+     * @param params
+     * @param data
+     * @param callback
+     */
     public postRequestOnSalesforce(params: { org_id: string, session_id: string }, data, callback?: (error: Error, results: any) => void) {
         this.orgMasterModel.getOrgConfigByOrgId(params.org_id, (error, config: IOrgMaster) => {
             if (!error && config) {
@@ -252,10 +162,13 @@ export class ProjectController {
             }
         });
     }
-    //#endregion
 
-    // Following function  insert all project and tasks into postgres database and
-    //  call salesforce endpoints to updates salesforce record external_id with postgres record id
+    /**
+     * @description Insert all project and tasks into postgres database and 
+     * call salesforce endpoints to updates salesforce record external_id with postgres record id
+     * @param params
+     * @param salesforceResponseArray
+     */
     public syncSalesforceUserDetails(params: { org_id: string, session_id: string }, salesforceResponseArray) {
         const that = this;
         try {
@@ -342,4 +255,84 @@ export class ProjectController {
         }
 
     }
+    //#endregion
+    // #region POC2 Publish
+    public updateProjectPOC2(req: express.Request, res: express.Response, next: express.NextFunction) {
+        this.updateProjectOrTaskPOC2(req, res, true);
+    }
+
+    public updateTaskPOC2(req: express.Request, res: express.Response, next: express.NextFunction) {
+        this.updateProjectOrTaskPOC2(req, res, false);
+    }
+
+    public updateProjectOrTaskPOC2(req: express.Request, res: express.Response, isProjectRequest: boolean) {
+        try {
+            const orgId = req.body.org_id;
+            if (orgId) {
+                const that = this;
+                const asyncTasks = [];
+                const records = req.body.records;
+                const queryConfigArray = [];
+                records.forEach((task) => {
+                    const queryConfig = buildUpdateStatements(task, isProjectRequest);
+                    queryConfigArray.push(queryConfig);
+                });
+                // The code below will update the salesforce first. Database will be updated after node.js recevies event subscription.
+                // that.preparedRequestAndUpdateSalesforceDBPOC2(orgId, records, isProjectRequest, (error, eventResponse) => {
+                //     if (error) {
+                //         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                //     } else {
+                //         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
+                //     }
+                // });
+                // The code below will update the database first and then publish it to salesforce.
+                // Since salesforce has triggers on the object, the data comes back to the Node.js subscription
+                // It causes unnecessary updates.
+                // Uncomment if you want to update the database first.
+                that.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
+                    console.log(error, results);
+                    if (!error) {
+                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
+
+                        // Update salesforce data
+                        if (results && results.length > 0) {
+                            that.preparedRequestAndUpdateSalesforceDBPOC2.call(that, orgId, records, isProjectRequest);
+                        }
+                    } else {
+                        res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                    }
+                });
+            } else {
+                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
+            }
+        } catch (error) {
+            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
+        }
+    }
+
+    public preparedRequestAndUpdateSalesforceDBPOC2(orgId: string, results: any[], isProjectRequest: boolean, callback: (error, eventResponse) => void) {
+        const data = { ProjectTasks: [], Projects: [] };
+        if (isProjectRequest) {
+            results.forEach((row) => {
+                data.Projects.push(formatSalesForceObject(row));
+            });
+        } else {
+            results.forEach((row) => {
+                data.ProjectTasks.push(formatSalesForceObject(row));
+            });
+        }
+        // const requestData = {
+        //     Data__c: JSON.stringify(data),
+        // };
+        if (orgId) {
+            const pubService = new PubService();
+            pubService.publish(orgId, JSON.stringify(data), (error, eventResponse) => {
+                console.log("Updat to salesforce result: ", eventResponse);
+                if (callback) {
+                    callback(error, eventResponse);
+                }
+            });
+        }
+    }
+    // #endregion
 }
