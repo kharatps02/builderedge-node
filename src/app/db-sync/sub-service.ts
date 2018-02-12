@@ -113,7 +113,7 @@ export class SubService {
                         queryConfigArray.push(queryConfig);
                     });
 
-                    this.projectModel.updateProjectsOrTasks(queryConfigArray, isProjectRequest, (error, results) => {
+                    this.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
                         console.log(error, results);
                         if (!error) {
                             console.log("Updated to the database from Subscribe (SPE).");
