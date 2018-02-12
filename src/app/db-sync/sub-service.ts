@@ -154,6 +154,7 @@ export class SubService {
             }
         });
     }
+
     private authenticateAndRun(orgConfig: IOrgMaster, callback: (error: any, response: request.Response) => void) {
         const serviceUserAuthConfig = {
             grant_type: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.grant_type,

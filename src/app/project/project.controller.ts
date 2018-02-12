@@ -65,7 +65,9 @@ export class ProjectController {
                                             projectArray = JSON.parse(response.body);
                                         }
                                         const formatedProjects = formatProjectAndTaskDetails(projectArray);
-
+                                        formatedProjects.map((self) => {
+                                            self['orgmaster_ref_id'] = config.vanity_id;
+                                        });
                                         that.syncSalesforceUserDetails.call(that, req.body.session_id, formatedProjects);
                                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
                                     }
@@ -251,6 +253,7 @@ export class ProjectController {
         });
     }
     //#endregion
+
     // Following function  insert all project and tasks into postgres database and
     //  call salesforce endpoints to updates salesforce record external_id with postgres record id
     public syncSalesforceUserDetails(params: { org_id: string, session_id: string }, salesforceResponseArray) {

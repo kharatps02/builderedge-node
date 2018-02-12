@@ -48,6 +48,7 @@ export class ProjectModel {
             callback(err, results);
         });
     }
+
     /**
      * getProjectExternalIdMap
      */
@@ -59,6 +60,7 @@ export class ProjectModel {
             callback(results.rows);
         });
     }
+
     /**
      * getProjectId
      */

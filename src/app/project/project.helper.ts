@@ -61,7 +61,7 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
     let insertQueryStr = '';
     let returning = '';
 
-    insertQueryStr = "INSERT INTO PROJECTS ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at ) VALUES ";
+    insertQueryStr = "INSERT INTO PROJECTS ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, orgmaster_ref_id ) VALUES ";
 
     if (!isProjectRequest) {
         insertQueryStr = "INSERT INTO project_tasks ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, project_ref_id ) VALUES ";
@@ -109,6 +109,9 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
 
         if (!isProjectRequest) {
             params.push(row.project_ref_id);
+            valueClause.push('$' + params.length);
+        } else {
+            params.push(row.orgmaster_ref_id);
             valueClause.push('$' + params.length);
         }
 
