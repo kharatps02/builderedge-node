@@ -111,8 +111,12 @@ export class ProjectController {
                                     item['External_Id__c'] = item['Id'];
                                     item['Id'] = externalId;
                                 };
-                                data.Projects.forEach(swap);
-                                data.ProjectTasks.forEach(swap);
+                                if (data.Projects) {
+                                    data.Projects.forEach(swap);
+                                }
+                                if (data.ProjectTasks) {
+                                    data.ProjectTasks.forEach(swap);
+                                }
 
                                 this.postRequestOnSalesforce({ org_id: orgId, session_id: sessionId }, { Data__c: JSON.stringify(data) });
                             }
