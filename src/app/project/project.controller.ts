@@ -7,6 +7,7 @@ import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
 import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements } from './project.helper';
 import { Constants } from '../../config/constants';
 import { PubService } from "../db-sync/pub-service";
+import { forEach } from "async";
 
 export class ProjectController {
     private projectModel: ProjectModel;
@@ -105,6 +106,14 @@ export class ProjectController {
                         if (results && results.length > 0) {
                             // that.updateProjectsOrTasksOnSalesforce.call(that, { org_id: orgId, session_id: sessionId }, data);
                             if (sessionId) {
+                                const swap = (item) => {
+                                    const externalId = item['External_Id__c'];
+                                    item['External_Id__c'] = item['Id'];
+                                    item['Id'] = externalId;
+                                };
+                                data.Projects.forEach(swap);
+                                data.ProjectTasks.forEach(swap);
+
                                 this.postRequestOnSalesforce({ org_id: orgId, session_id: sessionId }, { Data__c: JSON.stringify(data) });
                             }
                         }
