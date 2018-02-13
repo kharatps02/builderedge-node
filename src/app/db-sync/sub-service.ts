@@ -25,7 +25,6 @@ export class SubService {
      * @description Subscribes the event at the salesforce side and performs actions based on the event triggerred.
      */
     public config(orgConfig: IOrgMaster) {
-        const that = this;
         this.authenticateAndRun(orgConfig, (error: any, response: request.Response) => {
             if (error || !response) {
                 console.log('Authentication failed', error, response);
@@ -46,8 +45,8 @@ export class SubService {
                     this.cometd.subscribe(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT, (m: any) => {
                         const dataFromServer = m.data;
                         console.log('Response Received! :', dataFromServer);
-                        if (dataFromServer && dataFromServer.payload) {
-                            that.updateDB.call(that, dataFromServer.payload);
+                        if (dataFromServer && dataFromServer.payload && dataFromServer.payload.Action__c) {
+                            this.updateDB(dataFromServer.payload);
                         }
 
                         // Use dataFromServer here.
