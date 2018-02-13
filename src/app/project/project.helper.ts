@@ -170,7 +170,11 @@ export function formatSalesForceObject(params) {
     }
     return record;
 }
-
+export function swapSfId(item) {
+    const externalId = item['External_Id__c'];
+    item['External_Id__c'] = item['Id'];
+    item['Id'] = externalId;
+}
 export function buildUpdateStatements(params: ITaskDetails, isProject): { text: string, values: any[] } {
     const queryValues = [];
     const valueClause = [];

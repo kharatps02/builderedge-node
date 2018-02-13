@@ -4,7 +4,7 @@ import * as async from 'async';
 
 import { ProjectModel, IProjectRequest, IProjectDetails, ITaskDetails } from './project.model';
 import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
-import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements } from './project.helper';
+import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements, swapSfId } from './project.helper';
 import { Constants } from '../../config/constants';
 import { PubService } from "../db-sync/pub-service";
 import { forEach } from "async";
@@ -106,16 +106,12 @@ export class ProjectController {
                         if (results && results.length > 0) {
                             // that.updateProjectsOrTasksOnSalesforce.call(that, { org_id: orgId, session_id: sessionId }, data);
                             if (sessionId) {
-                                const swap = (item) => {
-                                    const externalId = item['External_Id__c'];
-                                    item['External_Id__c'] = item['Id'];
-                                    item['Id'] = externalId;
-                                };
+
                                 if (data.Projects) {
-                                    data.Projects.forEach(swap);
+                                    data.Projects.forEach(swapSfId);
                                 }
                                 if (data.ProjectTasks) {
-                                    data.ProjectTasks.forEach(swap);
+                                    data.ProjectTasks.forEach(swapSfId);
                                 }
 
                                 this.postRequestOnSalesforce({ org_id: orgId, session_id: sessionId }, { Data__c: JSON.stringify(data) });
@@ -332,22 +328,25 @@ export class ProjectController {
     }
 
     public preparedRequestAndUpdateSalesforceDBPOC2(orgId: string, results: any[], isProjectRequest: boolean, callback: (error, eventResponse) => void) {
-        // const data = { ProjectTasks: [], Projects: [] };
-        // if (isProjectRequest) {
-        //     results.forEach((row) => {
-        //         data.Projects.push(formatSalesForceObject(row));
-        //     });
-        // } else {
-        //     results.forEach((row) => {
-        //         data.ProjectTasks.push(formatSalesForceObject(row));
-        //     });
-        // }
+        const data = { ProjectTasks: [], Projects: [] };
+        if (isProjectRequest) {
+            data.Projects = results;
+            if (data.Projects) {
+                data.Projects.forEach(swapSfId);
+            }
+        } else {
+            data.ProjectTasks = results;
+            if (data.ProjectTasks) {
+                data.ProjectTasks.forEach(swapSfId);
+            }
+        }
         // const requestData = {
         //     Data__c: JSON.stringify(data),
         // };
+
         if (orgId) {
             const pubService = new PubService();
-            pubService.publish(orgId, JSON.stringify(results), (error, eventResponse) => {
+            pubService.publish(orgId, JSON.stringify(data), (error, eventResponse) => {
                 console.log("Updat to salesforce result: ", eventResponse);
                 if (callback) {
                     callback(error, eventResponse);
