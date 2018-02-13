@@ -79,6 +79,7 @@ export class ProjectController {
             if (sessionId && orgId) {
                 const asyncTasks = [];
                 const data = req.body.Data__c;
+                console.log("data received from SF", data);
                 const queryConfigArray = [];
 
                 if (data.Projects && data.Projects.length > 0) {
