@@ -17,7 +17,7 @@ export class ProjectRoutes {
         const router = express.Router();
         // POC1
         router.post('/api/project/update', this.authentication.ensureAuthorized, this.projectController.updateProjectOrTask.bind(this.projectController));
-        router.post('/api/project/getalldetails', this.authentication.ensureAuthorized, this.projectController.getalldetails.bind(this.projectController));
+        router.post('/api/project/getalldetails', this.authentication.ensureAuthorized, this.projectController.getAllDetails.bind(this.projectController));
 
         // POC2
         router.post('/api/external/project/update', this.authentication.ensureAuthorized, this.projectController.updateProjectPOC2.bind(this.projectController));

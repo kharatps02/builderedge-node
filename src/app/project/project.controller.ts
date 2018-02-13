@@ -17,8 +17,7 @@ export class ProjectController {
     }
 
     //#region POC1
-    public getalldetails(req: express.Request, res: express.Response, next: express.NextFunction) {
-        const that = this;
+    public getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             if (req.body.session_id && req.body.org_id) {
                 // Get project details from salesforce api
@@ -45,7 +44,8 @@ export class ProjectController {
                                         formatedProjects.map((self) => {
                                             self['OrgMaster_Ref_Id'] = config.vanity_id;
                                         });
-                                        that.syncSalesforceUserDetails.call(that, req.body.session_id, formatedProjects);
+                                        this.syncSalesforceUserDetails(
+                                            { org_id: req.body.session_id, session_id: req.body.session_id }, formatedProjects);
                                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
                                     }
                                 }
@@ -274,7 +274,6 @@ export class ProjectController {
         try {
             const orgId = req.body.org_id;
             if (orgId) {
-                const that = this;
                 const asyncTasks = [];
                 const records = req.body.records;
                 const queryConfigArray = [];
@@ -294,14 +293,17 @@ export class ProjectController {
                 // Since salesforce has triggers on the object, the data comes back to the Node.js subscription
                 // It causes unnecessary updates.
                 // Uncomment if you want to update the database first.
-                that.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
+                this.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
                     console.log(error, results);
                     if (!error) {
-                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
 
                         // Update salesforce data
                         if (results && results.length > 0) {
-                            that.preparedRequestAndUpdateSalesforceDBPOC2.call(that, orgId, records, isProjectRequest);
+                            this.preparedRequestAndUpdateSalesforceDBPOC2(orgId, records, isProjectRequest, (err, resp) => {
+                                res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED, response: resp, error: err });
+                            });
+                        } else {
+                            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: 'No response from the database' });
                         }
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
