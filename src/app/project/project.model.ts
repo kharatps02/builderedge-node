@@ -84,24 +84,24 @@ export interface IProjectRequest {
 }
 export interface IProjectDetails {
     id?: string;
-    external_id?: string;
+    external_id__c?: string;
     name: string;
     start?: Date;
     end?: Date;
-    start_date: Date;
-    end_date: Date;
-    completion_per?: number;
-    description?: string;
-    status?: string;
+    start_date__c: Date;
+    end_date__c: Date;
+    completion_percentage__c?: number;
+    description__c?: string;
+    status__c?: string;
     is_syc?: boolean;
-    created_by: string;
-    updated_by: string;
-    created_at?: Date;
-    updated_at?: Date;
+    createdbyid: string;
+    lastmodifiedbyid: string;
+    createddate?: Date;
+    lastmodifieddate?: Date;
     project_ref_id?: string;
     records?: ITaskDetails[];
 }
 
 export interface ITaskDetails extends IProjectDetails {
-    project_ref_id: string;
+    project__c: string;
 }

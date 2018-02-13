@@ -1,8 +1,14 @@
+/**
+ * @description This function is formatting data as per Gantt chart
+ * @param projectArray
+ */
+
 export function formatProjectAndTaskDetails(projectArray: any[]) {
     const newProjectArray: any[] = [];
     projectArray.forEach((project: any) => {
         let newProject: { [key: string]: any, series: any[] } = { series: [] };
         newProject = formatProjectDetails(project);
+        newProject['series'] = [];
         if (project.Project_Tasks__r && project.Project_Tasks__r.records
             && project.Project_Tasks__r.records.length > 0) {
             project.Project_Tasks__r.records.forEach((task: any) => {
@@ -17,40 +23,42 @@ export function formatProjectAndTaskDetails(projectArray: any[]) {
 }
 
 export function formatTaskDetails(task) {
-    const newTask: { [key: string]: any } = {};
+    const newTask = task;
     newTask['id'] = task['Id'];
     newTask['name'] = task['Name'] || '';
-    newTask['description'] = task['Description__c'] || '';
     newTask['start'] = new Date(task['Start_Date__c']).getTime();
     newTask['end'] = new Date(task['End_Date__c']).getTime();
-    newTask['start_date'] = task['Start_Date__c'];
-    newTask['end_date'] = task['End_Date__c'];
-    newTask['completion_per'] = task['Completion_Percentage__c'];
-    newTask['status'] = task['Status__c'];
-    newTask['created_by'] = task['CreatedById'];
-    newTask['updated_by'] = task['LastModifiedById'];
-    newTask['created_at'] = task['CreatedDate'];
-    newTask['updated_at'] = task['LastModifiedDate'];
-    newTask['external_id'] = task['External_Id__c'];
-    newTask['project_ref_id'] = task['Project__c'];
+
+    // newTask['description'] = task['Description__c'] || '';
+    // newTask['start_date'] = task['Start_Date__c'];
+    // newTask['end_date'] = task['End_Date__c'];
+    // newTask['completion_per'] = task['Completion_Percentage__c'];
+    // newTask['status'] = task['Status__c'];
+    // newTask['created_by'] = task['CreatedById'];
+    // newTask['updated_by'] = task['LastModifiedById'];
+    // newTask['created_at'] = task['CreatedDate'];
+    // newTask['updated_at'] = task['LastModifiedDate'];
+    // newTask['external_id'] = task['External_Id__c'];
+    // newTask['project_ref_id'] = task['Project__c'];
     return newTask;
 }
 export function formatProjectDetails(project) {
-    const newProject: { [key: string]: any, series: any[] } = { series: [] };
+    const newProject = project;
     newProject['id'] = project['Id'];
     newProject['name'] = project['Name'] || '';
-    newProject['description'] = project['Description__c'] || '';
     newProject['start'] = new Date(project['Start_Date__c']).getTime();
     newProject['end'] = new Date(project['End_Date__c']).getTime();
-    newProject['start_date'] = project['Start_Date__c'];
-    newProject['end_date'] = project['End_Date__c'];
-    newProject['completion_per'] = project['Completion_Percentage__c'];
-    newProject['status'] = project['Status__c'];
-    newProject['created_by'] = project['CreatedById'];
-    newProject['updated_by'] = project['LastModifiedById'];
-    newProject['created_at'] = project['CreatedDate'];
-    newProject['updated_at'] = project['LastModifiedDate'];
-    newProject['external_id'] = project['External_Id__c'];
+
+    // newProject['description'] = project['Description__c'] || '';
+    // newProject['start_date'] = project['Start_Date__c'];
+    // newProject['end_date'] = project['End_Date__c'];
+    // newProject['completion_per'] = project['Completion_Percentage__c'];
+    // newProject['status'] = project['Status__c'];
+    // newProject['created_by'] = project['CreatedById'];
+    // newProject['updated_by'] = project['LastModifiedById'];
+    // newProject['created_at'] = project['CreatedDate'];
+    // newProject['updated_at'] = project['LastModifiedDate'];
+    // newProject['external_id'] = project['External_Id__c'];
     return newProject;
 }
 
@@ -123,72 +131,7 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
         values: params,
     };
 }
-export function buildInsertStatementsForPublish(rows, returnFieldArr = [], isProjectRequest: boolean = true) {
-    const params = [];
-    const chunks = [];
-    const valueStr = '';
-    let insertQueryStr = '';
-    let returning = '';
 
-    insertQueryStr = "INSERT INTO PROJECTS ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at ) VALUES ";
-
-    if (!isProjectRequest) {
-        insertQueryStr = "INSERT INTO project_tasks ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, project_ref_id ) VALUES ";
-    }
-
-    if (returnFieldArr.length !== 0) {
-        returning = ' RETURNING ' + returnFieldArr.toString();
-    }
-
-    rows.forEach((row) => {
-        const valueClause = [];
-
-        params.push(row.external_id);
-        valueClause.push('$' + params.length);
-
-        params.push(row.name);
-        valueClause.push('$' + params.length);
-
-        params.push(row.description);
-        valueClause.push('$' + params.length);
-
-        params.push(row.start_date);
-        valueClause.push('$' + params.length);
-
-        params.push(row.end_date);
-        valueClause.push('$' + params.length);
-
-        params.push(row.completion_per);
-        valueClause.push('$' + params.length);
-
-        params.push(row.status);
-        valueClause.push('$' + params.length);
-
-        params.push(row.created_by);
-        valueClause.push('$' + params.length);
-
-        params.push(row.updated_by);
-        valueClause.push('$' + params.length);
-
-        params.push(row.created_at);
-        valueClause.push('$' + params.length);
-
-        params.push(row.updated_at);
-        valueClause.push('$' + params.length);
-
-        if (!isProjectRequest) {
-            params.push(row.project_ref_id);
-            valueClause.push('$' + params.length);
-        }
-
-        chunks.push('(' + valueClause.join(', ') + ')');
-    });
-
-    return {
-        text: insertQueryStr + chunks.join(', ') + returning,
-        values: params,
-    };
-}
 export function formatSalesForceObject(params) {
 
     const record = {};

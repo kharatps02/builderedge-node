@@ -17,8 +17,8 @@ export class OrgMasterModel {
     public getAllOrgDetails(callback: (error: Error, results: IOrgMaster[]) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        const queryString = 'SELECT DISTINCT ON (user_id) * FROM ORG_MASTER';
-        // const queryString = 'SELECT DISTINCT ON (org_id) * FROM ORG_MASTER';
+        // const queryString = 'SELECT DISTINCT ON (user_id) * FROM ORG_MASTER';
+        const queryString = 'SELECT DISTINCT ON (org_id) * FROM ORG_MASTER';
         const orgConfigMap = new Map<string, any>();
 
         pgClient.query(queryString, (error1, results) => {

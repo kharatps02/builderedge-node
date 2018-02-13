@@ -167,7 +167,7 @@ export class ProjectController {
 
     /**
      * @description Insert all project and tasks into postgres database and
-     * call salesforce endpoints to updates salesforce record external_id with postgres record id
+     * call salesforce endpoints to updates salesforce record external_id__c with postgres record id
      * @param params
      * @param salesforceResponseArray
      */
@@ -176,15 +176,15 @@ export class ProjectController {
         try {
             let projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
 
-            // Filter newly added projects, those records which hasn't external_id
+            // Filter newly added projects, those records which hasn't external_id__c
             projectRecords = projectRecords.filter((self) => {
-                if (!self['external_id']) {
+                if (!self['external_id__c']) {
                     return true;
                 }
             });
 
             if (projectRecords && projectRecords.length > 0) {
-                const queryConfig = buildInsertStatements(projectRecords, ['_id', 'external_id'], true);
+                const queryConfig = buildInsertStatements(projectRecords, ['id', 'external_id__c'], true);
                 // Insert Projects records
                 that.projectModel.insertManyStatements(queryConfig, (error, projectResult) => {
                     if (!error) {
@@ -195,29 +195,29 @@ export class ProjectController {
 
                         // Prepared  object to update postgres id into salesforce databse
                         projectResult.rows.forEach((row) => {
-                            pksExternalPksMap[row.external_id] = row._id;
-                            salesforceRequestObj.Projects.push({ Id: row.external_id, External_Id__c: row._id });
+                            pksExternalPksMap[row.external_id__c] = row.id;
+                            salesforceRequestObj.Projects.push({ Id: row.external_id__c, External_Id__c: row.id });
                         });
 
                         salesforceResponseArray.forEach((projectRecord) => {
-                            const projectId = pksExternalPksMap[projectRecord['id']] || projectRecord['external_id'];
+                            const projectId = pksExternalPksMap[projectRecord['id']] || projectRecord['external_id__c'];
                             if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
                                 projectRecord.series.forEach((taskRecord) => {
-                                    taskRecord['project_ref_id'] = projectId;
+                                    taskRecord['project__c'] = projectId;
                                     taskRecords.push(taskRecord);
                                 });
                             }
                         });
 
                         if (taskRecords && taskRecords.length) {
-                            const tasksQueryConfig = buildInsertStatements(taskRecords, ['_id', 'external_id'], false);
+                            const tasksQueryConfig = buildInsertStatements(taskRecords, ['id', 'external_id__c'], false);
                             that.projectModel.insertManyStatements(tasksQueryConfig, (error1, taskResult) => {
                                 if (!error1) {
                                     // console.log('In execMultipleStatment task taskResult>>', taskResult);
 
                                     // Prepared  object to update postgres id into salesforce databse
                                     taskResult.rows.forEach((row) => {
-                                        salesforceRequestObj.ProjectTasks.push({ Id: row.external_id, External_Id__c: row._id });
+                                        salesforceRequestObj.ProjectTasks.push({ Id: row.external_id__c, External_Id__c: row.id });
                                     });
                                 } else {
                                     console.log('In execMultipleStatment task error>>', error1);

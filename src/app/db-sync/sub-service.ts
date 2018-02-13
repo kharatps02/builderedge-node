@@ -5,7 +5,7 @@ import * as cometDNode from 'cometd-nodejs-client';
 import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
 import { ProjectModel } from '../project/project.model';
 import { ProjectController } from '../project/project.controller';
-import { buildUpdateStatements, formatProjectDetails, formatTaskDetails, buildInsertStatements, buildInsertStatementsForPublish } from '../project/project.helper';
+import { buildUpdateStatements, formatProjectDetails, formatTaskDetails, buildInsertStatements } from '../project/project.helper';
 import { PubService } from './pub-service';
 
 export class SubService {
@@ -73,9 +73,9 @@ export class SubService {
             if (data.Projects !== null) {
                 records = data.Projects;
                 records = records.map((self) => {
-                    self = formatProjectDetails(self);
-                    const externalId = self['external_id'];
-                    self['external_id'] = self['id'];
+                    // self = formatProjectDetails(self);
+                    const externalId = self['external_id__c'];
+                    self['external_id__c'] = self['id'];
                     if (payload.Action__c === 'update') {
                         self['id'] = externalId;
                     } else {
@@ -85,21 +85,16 @@ export class SubService {
                 });
             } else if (data.ProjectTasks !== null) {
                 records = data.ProjectTasks;
-
                 records = records.map((self) => {
-                    self = formatTaskDetails(self);
-                    const externalId = self['external_id'];
-                    self['external_id'] = self['id'];
+                    // self = formatTaskDetails(self);
+                    const externalId = self['external_id__c'];
+                    self['external_id__c'] = self['id'];
                     if (payload.Action__c === 'update') {
                         self['id'] = externalId;
                     } else {
                         delete self['id'];
                     }
-                    self['project_ref_id'] = projectMap.find((p) => p.external_id === self['project_ref_id'])._id;
-
-                    // this.projectModel.getProjectIdByExternalId(self['project_ref_id'], (projectId) => {
-                    //     self['project_ref_id'] = projectId;
-                    // });
+                    self['project__c'] = projectMap.find((p) => p.external_id__c === self['project__c']).id;
                     return self;
                 });
                 isProjectRequest = false;
@@ -121,7 +116,7 @@ export class SubService {
                     });
                 } else {
                     // Insert here
-                    const queryConfig = buildInsertStatementsForPublish(records, ['_id', 'external_id'], isProjectRequest);
+                    const queryConfig = buildInsertStatements(records, ['id', 'external_id__c'], isProjectRequest);
 
                     this.projectModel.insertManyStatements(queryConfig, (error, results) => {
                         console.log(error, results);
@@ -130,10 +125,10 @@ export class SubService {
                             if (results.rows && results.rows.length > 0) {
                                 const pubservice = new PubService();
                                 results.rows.forEach((r) => {
-                                    r['id'] = r.external_id;
-                                    r['external_id__c'] = r._id;
-                                    delete r._id;
-                                    delete r.external_id;
+                                    r['id'] = r.external_id__c;
+                                    r['external_id__c'] = r.id;
+                                    delete r.id;
+                                    delete r.external_id__c;
                                 });
                                 let pubData = null;
                                 if (isProjectRequest) {
