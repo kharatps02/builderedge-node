@@ -74,12 +74,10 @@ export class SubService {
                 records = data.Projects;
                 records = records.map((self) => {
                     // self = formatProjectDetails(self);
-                    const externalId = self['external_id__c'];
-                    self['external_id__c'] = self['id'];
                     if (payload.Action__c === 'update') {
-                        self['id'] = externalId;
-                    } else {
-                        delete self['id'];
+                        const externalId = self['External_Id__c'];
+                        self['External_Id__c'] = self['Id'];
+                        self['Id'] = externalId;
                     }
                     return self;
                 });
@@ -87,14 +85,12 @@ export class SubService {
                 records = data.ProjectTasks;
                 records = records.map((self) => {
                     // self = formatTaskDetails(self);
-                    const externalId = self['external_id__c'];
-                    self['external_id__c'] = self['id'];
                     if (payload.Action__c === 'update') {
-                        self['id'] = externalId;
-                    } else {
-                        delete self['id'];
+                        const externalId = self['External_Id__c'];
+                        self['External_Id__c'] = self['Id'];
+                        self['Id'] = externalId;
                     }
-                    self['project__c'] = projectMap.find((p) => p.external_id__c === self['project__c']).id;
+                    self['Project__c'] = projectMap.find((p) => p.External_Id__c === self['Project__c']).Id;
                     return self;
                 });
                 isProjectRequest = false;
@@ -116,7 +112,7 @@ export class SubService {
                     });
                 } else {
                     // Insert here
-                    const queryConfig = buildInsertStatements(records, ['id', 'external_id__c'], isProjectRequest);
+                    const queryConfig = buildInsertStatements(records, ['"Id"', '"External_Id__c"'], isProjectRequest);
 
                     this.projectModel.insertManyStatements(queryConfig, (error, results) => {
                         console.log(error, results);
@@ -125,10 +121,10 @@ export class SubService {
                             if (results.rows && results.rows.length > 0) {
                                 const pubservice = new PubService();
                                 results.rows.forEach((r) => {
-                                    r['id'] = r.external_id__c;
-                                    r['external_id__c'] = r.id;
-                                    delete r.id;
-                                    delete r.external_id__c;
+                                    r['Id'] = r.External_Id__c;
+                                    r['External_Id__c'] = r.Id;
+                                    delete r.Id;
+                                    delete r.External_Id__c;
                                 });
                                 let pubData = null;
                                 if (isProjectRequest) {

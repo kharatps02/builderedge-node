@@ -4,7 +4,7 @@ import * as async from 'async';
 
 import { ProjectModel, IProjectRequest, IProjectDetails, ITaskDetails } from './project.model';
 import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
-import { formatProjectAndTaskDetails, buildInsertStatements, formatSalesForceObject, buildUpdateStatements } from './project.helper';
+import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements } from './project.helper';
 import { Constants } from '../../config/constants';
 import { PubService } from "../db-sync/pub-service";
 
@@ -43,7 +43,7 @@ export class ProjectController {
                                         }
                                         const formatedProjects = formatProjectAndTaskDetails(projectArray);
                                         formatedProjects.map((self) => {
-                                            self['orgmaster_ref_id'] = config.vanity_id;
+                                            self['OrgMaster_Ref_Id'] = config.vanity_id;
                                         });
                                         that.syncSalesforceUserDetails.call(that, req.body.session_id, formatedProjects);
                                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
@@ -77,7 +77,6 @@ export class ProjectController {
             const sessionId = req.body.session_id;
             const orgId = req.body.org_id;
             if (sessionId && orgId) {
-                const that = this;
                 const asyncTasks = [];
                 const data = req.body.Data__c;
                 const queryConfigArray = [];
@@ -96,14 +95,17 @@ export class ProjectController {
                     });
                 }
 
-                that.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
+                this.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
                     console.log(error, results);
                     if (!error) {
                         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
 
                         // Update salesforce data
                         if (results && results.length > 0) {
-                            that.updateProjectsOrTasksOnSalesforce.call(that, { org_id: orgId, session_id: sessionId }, data);
+                            // that.updateProjectsOrTasksOnSalesforce.call(that, { org_id: orgId, session_id: sessionId }, data);
+                            if (sessionId) {
+                                this.postRequestOnSalesforce({ org_id: orgId, session_id: sessionId }, { Data__c: JSON.stringify(data) });
+                            }
                         }
                     } else {
                         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
@@ -117,23 +119,23 @@ export class ProjectController {
         }
     }
 
-    public updateProjectsOrTasksOnSalesforce(params: { org_id: string, session_id: string }, data: { ProjectTasks: IProjectDetails[], Projects: IProjectDetails[] }) {
-        const requestData = { ProjectTasks: [], Projects: [] };
-        if (data.Projects && data.Projects.length > 0) {
-            data.Projects.forEach((row) => {
-                requestData.Projects.push(formatSalesForceObject(row));
-            });
-        }
-        if (data.ProjectTasks && data.ProjectTasks.length > 0) {
-            data.ProjectTasks.forEach((row) => {
-                requestData.ProjectTasks.push(formatSalesForceObject(row));
-            });
-        }
+    // public updateProjectsOrTasksOnSalesforce(params: { org_id: string, session_id: string }, data: { ProjectTasks: IProjectDetails[], Projects: IProjectDetails[] }) {
+    //     const requestData = { ProjectTasks: [], Projects: [] };
+    //     // if (data.Projects && data.Projects.length > 0) {
+    //     //     data.Projects.forEach((row) => {
+    //     //         requestData.Projects.push(formatSalesForceObject(row));
+    //     //     });
+    //     // }
+    //     // if (data.ProjectTasks && data.ProjectTasks.length > 0) {
+    //     //     data.ProjectTasks.forEach((row) => {
+    //     //         requestData.ProjectTasks.push(formatSalesForceObject(row));
+    //     //     });
+    //     // }
 
-        if (params.session_id) {
-            this.postRequestOnSalesforce(params, { Data__c: JSON.stringify(requestData) });
-        }
-    }
+    //     if (params.session_id) {
+    //         this.postRequestOnSalesforce(params, { Data__c: JSON.stringify(requestData) });
+    //     }
+    // }
 
     /**
      * @description Sent post request on salesforce endpoints
@@ -174,17 +176,18 @@ export class ProjectController {
     public syncSalesforceUserDetails(params: { org_id: string, session_id: string }, salesforceResponseArray) {
         const that = this;
         try {
-            let projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
+            const projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
 
             // Filter newly added projects, those records which hasn't external_id__c
-            projectRecords = projectRecords.filter((self) => {
-                if (!self['external_id__c']) {
-                    return true;
-                }
-            });
+            // projectRecords = projectRecords.filter((self) => {
+            //     if (!self['External_Id__c']) {
+            //         return true;
+            //     }
+            // });
 
             if (projectRecords && projectRecords.length > 0) {
-                const queryConfig = buildInsertStatements(projectRecords, ['id', 'external_id__c'], true);
+                const queryConfig = buildInsertStatements(projectRecords, ['"Id"', '"External_Id__c"'], true);
+                console.log("query statement", queryConfig);
                 // Insert Projects records
                 that.projectModel.insertManyStatements(queryConfig, (error, projectResult) => {
                     if (!error) {
@@ -195,29 +198,29 @@ export class ProjectController {
 
                         // Prepared  object to update postgres id into salesforce databse
                         projectResult.rows.forEach((row) => {
-                            pksExternalPksMap[row.external_id__c] = row.id;
-                            salesforceRequestObj.Projects.push({ Id: row.external_id__c, External_Id__c: row.id });
+                            pksExternalPksMap[row.External_Id__c] = row.Id;
+                            salesforceRequestObj.Projects.push({ Id: row.External_Id__c, External_Id__c: row.Id });
                         });
 
                         salesforceResponseArray.forEach((projectRecord) => {
-                            const projectId = pksExternalPksMap[projectRecord['id']] || projectRecord['external_id__c'];
+                            const projectId = pksExternalPksMap[projectRecord['Id']] || projectRecord['External_Id__c'];
                             if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
                                 projectRecord.series.forEach((taskRecord) => {
-                                    taskRecord['project__c'] = projectId;
+                                    taskRecord['Project__c'] = projectId;
                                     taskRecords.push(taskRecord);
                                 });
                             }
                         });
 
                         if (taskRecords && taskRecords.length) {
-                            const tasksQueryConfig = buildInsertStatements(taskRecords, ['id', 'external_id__c'], false);
+                            const tasksQueryConfig = buildInsertStatements(taskRecords, ['"Id"', '"External_Id__c"'], false);
                             that.projectModel.insertManyStatements(tasksQueryConfig, (error1, taskResult) => {
                                 if (!error1) {
                                     // console.log('In execMultipleStatment task taskResult>>', taskResult);
 
                                     // Prepared  object to update postgres id into salesforce databse
                                     taskResult.rows.forEach((row) => {
-                                        salesforceRequestObj.ProjectTasks.push({ Id: row.external_id__c, External_Id__c: row.id });
+                                        salesforceRequestObj.ProjectTasks.push({ Id: row.External_Id__c, External_Id__c: row.Id });
                                     });
                                 } else {
                                     console.log('In execMultipleStatment task error>>', error1);
@@ -313,22 +316,22 @@ export class ProjectController {
     }
 
     public preparedRequestAndUpdateSalesforceDBPOC2(orgId: string, results: any[], isProjectRequest: boolean, callback: (error, eventResponse) => void) {
-        const data = { ProjectTasks: [], Projects: [] };
-        if (isProjectRequest) {
-            results.forEach((row) => {
-                data.Projects.push(formatSalesForceObject(row));
-            });
-        } else {
-            results.forEach((row) => {
-                data.ProjectTasks.push(formatSalesForceObject(row));
-            });
-        }
+        // const data = { ProjectTasks: [], Projects: [] };
+        // if (isProjectRequest) {
+        //     results.forEach((row) => {
+        //         data.Projects.push(formatSalesForceObject(row));
+        //     });
+        // } else {
+        //     results.forEach((row) => {
+        //         data.ProjectTasks.push(formatSalesForceObject(row));
+        //     });
+        // }
         // const requestData = {
         //     Data__c: JSON.stringify(data),
         // };
         if (orgId) {
             const pubService = new PubService();
-            pubService.publish(orgId, JSON.stringify(data), (error, eventResponse) => {
+            pubService.publish(orgId, JSON.stringify(results), (error, eventResponse) => {
                 console.log("Updat to salesforce result: ", eventResponse);
                 if (callback) {
                     callback(error, eventResponse);

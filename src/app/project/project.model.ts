@@ -11,7 +11,7 @@ export class ProjectModel {
     constructor() {
 
     }
-
+    // Not being used.
     public create(params: IProjectRequest, callback: (error: Error, results: any) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
@@ -55,7 +55,7 @@ export class ProjectModel {
     public getProjectExternalIdMap(callback: (projectId: any[]) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        pgClient.query('SELECT _id, external_id from projects', (err, results) => {
+        pgClient.query('SELECT "Id", "External_Id__c" from "Project__c"', (err, results) => {
             pgClient.end();
             callback(results.rows);
         });
@@ -67,7 +67,7 @@ export class ProjectModel {
     public getProjectIdByExternalId(externalId: string, callback: (projectId) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        pgClient.query('SELECT _id from projects WHERE external_id = $1', [externalId], (err, results) => {
+        pgClient.query('SELECT "Id" from "Project__c" WHERE "External_Id__c" = $1', [externalId], (err, results) => {
             pgClient.end();
             callback(results[0]);
         });
@@ -82,26 +82,30 @@ export interface IProjectRequest {
     created_by: string;
     updated_by: string;
 }
+// "External_Id__c", "Name", "Description__c", "Start_Date__c", "End_Date__c", "Completion_Percentage__c", "Status__c",
+// "CreatedById", "LastModifiedById", "CreatedDate", "LastModifiedDate", "Project__c"
 export interface IProjectDetails {
-    id?: string;
-    external_id__c?: string;
-    name: string;
+    Id?: string;
+    External_Id__c?: string;
+    Name: string;
+    // for Gannt
     start?: Date;
+    // for Gannt
     end?: Date;
-    start_date__c: Date;
-    end_date__c: Date;
-    completion_percentage__c?: number;
-    description__c?: string;
-    status__c?: string;
-    is_syc?: boolean;
-    createdbyid: string;
-    lastmodifiedbyid: string;
-    createddate?: Date;
-    lastmodifieddate?: Date;
-    project_ref_id?: string;
+    Start_Date__c: Date;
+    End_Date__c: Date;
+    Completion_Percentage__c?: number;
+    Description__c?: string;
+    Status__c?: string;
+    CreatedById: string;
+    LastModifiedById: string;
+    CreatedDate?: Date;
+    LastModifiedDate?: Date;
+    OrgMaster_Ref_Id?: string;
+    // for Gannt
     records?: ITaskDetails[];
 }
 
 export interface ITaskDetails extends IProjectDetails {
-    project__c: string;
+    Project__c: string;
 }

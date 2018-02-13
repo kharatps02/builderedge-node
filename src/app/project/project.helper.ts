@@ -1,3 +1,4 @@
+import { ITaskDetails } from './project.model';
 /**
  * @description This function is formatting data as per Gantt chart
  * @param projectArray
@@ -24,7 +25,7 @@ export function formatProjectAndTaskDetails(projectArray: any[]) {
 
 export function formatTaskDetails(task) {
     const newTask = task;
-    newTask['id'] = task['Id'];
+    // newTask['id'] = task['Id'];
     newTask['name'] = task['Name'] || '';
     newTask['start'] = new Date(task['Start_Date__c']).getTime();
     newTask['end'] = new Date(task['End_Date__c']).getTime();
@@ -44,7 +45,7 @@ export function formatTaskDetails(task) {
 }
 export function formatProjectDetails(project) {
     const newProject = project;
-    newProject['id'] = project['Id'];
+    // newProject['id'] = project['Id'];
     newProject['name'] = project['Name'] || '';
     newProject['start'] = new Date(project['Start_Date__c']).getTime();
     newProject['end'] = new Date(project['End_Date__c']).getTime();
@@ -69,10 +70,10 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
     let insertQueryStr = '';
     let returning = '';
 
-    insertQueryStr = "INSERT INTO PROJECTS ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, orgmaster_ref_id ) VALUES ";
+    insertQueryStr = `INSERT INTO "Project__c" ( "External_Id__c", "Name", "Description__c", "Start_Date__c", "End_Date__c", "Completion_Percentage__c", "Status__c", "CreatedById", "LastModifiedById", "CreatedDate", "LastModifiedDate", "OrgMaster_Ref_Id" ) VALUES `;
 
     if (!isProjectRequest) {
-        insertQueryStr = "INSERT INTO project_tasks ( external_id, name,description, start_date, end_date, completion_per, status, created_by, updated_by, created_at, updated_at, project_ref_id ) VALUES ";
+        insertQueryStr = `INSERT INTO "Project_Task__c" ( "External_Id__c", "Name", "Description__c", "Start_Date__c", "End_Date__c", "Completion_Percentage__c", "Status__c", "CreatedById", "LastModifiedById", "CreatedDate", "LastModifiedDate", "Project__c" ) VALUES `;
     }
 
     if (returnFieldArr.length !== 0) {
@@ -82,44 +83,44 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
     rows.forEach((row) => {
         const valueClause = [];
 
-        params.push(row.id);
+        params.push(row.Id);
         valueClause.push('$' + params.length);
 
-        params.push(row.name);
+        params.push(row.Name);
         valueClause.push('$' + params.length);
 
-        params.push(row.description);
+        params.push(row.Description__c);
         valueClause.push('$' + params.length);
 
-        params.push(row.start_date);
+        params.push(row.Start_Date__c);
         valueClause.push('$' + params.length);
 
-        params.push(row.end_date);
+        params.push(row.End_Date__c);
         valueClause.push('$' + params.length);
 
-        params.push(row.completion_per);
+        params.push(row.Completion_Percentage__c);
         valueClause.push('$' + params.length);
 
-        params.push(row.status);
+        params.push(row.Status__c);
         valueClause.push('$' + params.length);
 
-        params.push(row.created_by);
+        params.push(row.CreatedById);
         valueClause.push('$' + params.length);
 
-        params.push(row.updated_by);
+        params.push(row.LastModifiedById);
         valueClause.push('$' + params.length);
 
-        params.push(row.created_at);
+        params.push(row.CreatedDate);
         valueClause.push('$' + params.length);
 
-        params.push(row.updated_at);
+        params.push(row.LastModifiedDate);
         valueClause.push('$' + params.length);
 
         if (!isProjectRequest) {
-            params.push(row.project_ref_id);
+            params.push(row.Project__c);
             valueClause.push('$' + params.length);
         } else {
-            params.push(row.orgmaster_ref_id);
+            params.push(row.OrgMaster_Ref_Id);
             valueClause.push('$' + params.length);
         }
 
@@ -132,6 +133,7 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
     };
 }
 
+// Not being used.
 export function formatSalesForceObject(params) {
 
     const record = {};
@@ -169,48 +171,48 @@ export function formatSalesForceObject(params) {
     return record;
 }
 
-export function buildUpdateStatements(params, isProject): { text: string, values: any[] } {
+export function buildUpdateStatements(params: ITaskDetails, isProject): { text: string, values: any[] } {
     const queryValues = [];
     const valueClause = [];
 
-    if (params.name) {
-        queryValues.push(params.name);
-        valueClause.push(' name= $' + queryValues.length);
+    if (params.Name) {
+        queryValues.push(params.Name);
+        valueClause.push(' "Name"= $' + queryValues.length);
     }
-    if (params.start_date) {
-        queryValues.push(params.start_date);
-        valueClause.push(' start_date= $' + queryValues.length);
+    if (params.Start_Date__c) {
+        queryValues.push(params.Start_Date__c);
+        valueClause.push(' "Start_Date__c"= $' + queryValues.length);
     }
-    if (params.end_date) {
-        queryValues.push(params.end_date);
-        valueClause.push(' end_date= $' + queryValues.length);
+    if (params.End_Date__c) {
+        queryValues.push(params.End_Date__c);
+        valueClause.push(' "End_Date__c"= $' + queryValues.length);
     }
-    if (params.completion_per) {
-        queryValues.push(params.completion_per);
-        valueClause.push(' completion_per= $' + queryValues.length);
-    }
-
-    if (params.description) {
-        queryValues.push(params.description);
-        valueClause.push(' description= $' + queryValues.length);
+    if (params.Completion_Percentage__c) {
+        queryValues.push(params.Completion_Percentage__c);
+        valueClause.push(' "Completion_Percentage__c"= $' + queryValues.length);
     }
 
-    if (params.status) {
-        queryValues.push(params.status);
-        valueClause.push(' status= $' + queryValues.length);
+    if (params.Description__c) {
+        queryValues.push(params.Description__c);
+        valueClause.push(' "Description__c"= $' + queryValues.length);
     }
 
-    if (params.updated_by) {
-        queryValues.push(params.updated_by);
-        valueClause.push(' updated_by= $' + queryValues.length);
+    if (params.Status__c) {
+        queryValues.push(params.Status__c);
+        valueClause.push(' "Status__c"= $' + queryValues.length);
     }
 
-    queryValues.push(params.id);
-    let updateQueryString = 'UPDATE PROJECTS';
+    if (params.LastModifiedById) {
+        queryValues.push(params.LastModifiedById);
+        valueClause.push(' "LastModifiedById"= $' + queryValues.length);
+    }
+
+    queryValues.push(params.Id);
+    let updateQueryString = 'UPDATE "Project__c"';
     if (!isProject) {
-        updateQueryString = 'UPDATE PROJECT_TASKS';
+        updateQueryString = 'UPDATE "Project_Task__c"';
     }
-    updateQueryString += '  SET ' + valueClause.join(', ') + ' WHERE _id=$' + (valueClause.length + 1);
+    updateQueryString += '  SET ' + valueClause.join(', ') + ' WHERE "Id"=$' + (valueClause.length + 1);
     // console.log('updateQueryString', updateQueryString, queryValues);
     return {
         text: updateQueryString,
