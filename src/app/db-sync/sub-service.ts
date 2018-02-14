@@ -1,3 +1,4 @@
+import { Authentication } from './../../core/authentication/authentication';
 import * as request from 'request';
 import * as lib from "cometd";
 import { Constants } from '../../config/constants';
@@ -9,6 +10,7 @@ import { buildUpdateStatements, formatProjectDetails, formatTaskDetails, buildIn
 import { PubService } from './pub-service';
 
 export class SubService {
+    private authenticator: Authentication;
     private sessionId: any;
     private cometd: any;
     private orgMasterModel: OrgMasterModel;
@@ -18,6 +20,7 @@ export class SubService {
         this.cometd = new lib.CometD(orgConfig.org_id);
         this.orgMasterModel = new OrgMasterModel();
         this.projectModel = new ProjectModel();
+        this.authenticator = new Authentication();
         this.config(orgConfig);
     }
 
@@ -25,7 +28,7 @@ export class SubService {
      * @description Subscribes the event at the salesforce side and performs actions based on the event triggerred.
      */
     public config(orgConfig: IOrgMaster) {
-        this.authenticateAndRun(orgConfig, (error: any, response: request.Response) => {
+        this.authenticator.authenticateAndRun(orgConfig, (error: any, response: request.Response) => {
             if (error || !response) {
                 console.log('Authentication failed', error, response);
                 return;
@@ -137,29 +140,6 @@ export class SubService {
                         }
                     });
                 }
-            }
-        });
-    }
-
-    private authenticateAndRun(orgConfig: IOrgMaster, callback: (error: any, response: request.Response) => void) {
-        const serviceUserAuthConfig = {
-            grant_type: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.grant_type,
-            client_id: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_id,
-            client_secret: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_secret,
-            refresh_token: orgConfig.refresh_token,
-        };
-        const requestObj = {
-            url: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.url,
-            qs: serviceUserAuthConfig,
-            method: 'POST',
-            json: true,
-        };
-
-        console.log('In postRequestOnSalesforce requestObj - ', requestObj);
-        return request.post(requestObj, (error, response) => {
-            console.log('In postRequestOnSalesforce', error, response || response.body);
-            if (callback) {
-                callback(error, response);
             }
         });
     }

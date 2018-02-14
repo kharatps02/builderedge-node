@@ -8,6 +8,7 @@ import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatemen
 import { Constants } from '../../config/constants';
 import { PubService } from "../db-sync/pub-service";
 import { forEach } from "async";
+import { Enums } from "../../config/enums";
 
 export class ProjectController {
     private projectModel: ProjectModel;
@@ -34,7 +35,7 @@ export class ProjectController {
                         request(config.api_base_url + '/services/apexrest/ProductService', requestHeader, (error1, response) => {
                             if (!error1) {
                                 if (response.statusCode === 401) {
-                                    res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: response.body[0].message });
+                                    res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: response.body[0].message });
                                 } else {
                                     if (response.body && response.body.length > 0) {
                                         let projectArray: IProjectDetails[] = response.body;
@@ -47,23 +48,23 @@ export class ProjectController {
                                         });
                                         this.syncSalesforceUserDetails(
                                             { org_id: req.body.session_id, session_id: req.body.session_id }, formatedProjects);
-                                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
+                                        res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
                                     }
                                 }
                             } else {
-                                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error1 });
+                                res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error1 });
                             }
                         });
                     } else {
-                        res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                        res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error });
                     }
                 });
             } else {
-                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
+                res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
             }
         } catch (e) {
             console.log(e);
-            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
+            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
     }
 
@@ -100,7 +101,7 @@ export class ProjectController {
                 this.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
                     console.log(error, results);
                     if (!error) {
-                        res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
+                        res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
 
                         // Update salesforce data
                         if (results && results.length > 0) {
@@ -118,14 +119,14 @@ export class ProjectController {
                             }
                         }
                     } else {
-                        res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                        res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error });
                     }
                 });
             } else {
-                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
+                res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
             }
         } catch (error) {
-            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
+            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
     }
 
@@ -291,18 +292,6 @@ export class ProjectController {
                     const queryConfig = buildUpdateStatements(task, isProjectRequest);
                     queryConfigArray.push(queryConfig);
                 });
-                // The code below will update the salesforce first. Database will be updated after node.js recevies event subscription.
-                // that.preparedRequestAndUpdateSalesforceDBPOC2(orgId, records, isProjectRequest, (error, eventResponse) => {
-                //     if (error) {
-                //         res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
-                //     } else {
-                //         res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED });
-                //     }
-                // });
-                // The code below will update the database first and then publish it to salesforce.
-                // Since salesforce has triggers on the object, the data comes back to the Node.js subscription
-                // It causes unnecessary updates.
-                // Uncomment if you want to update the database first.
                 this.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
                     console.log(error, results);
                     if (!error) {
@@ -310,20 +299,20 @@ export class ProjectController {
                         // Update salesforce data
                         if (results && results.length > 0) {
                             this.preparedRequestAndUpdateSalesforceDBPOC2(orgId, records, isProjectRequest, (err, resp) => {
-                                res.send({ status: Constants.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED, response: resp, error: err });
+                                res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: Constants.MESSAGES.UPDATED, response: resp, error: err });
                             });
                         } else {
-                            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: 'No response from the database' });
+                            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: 'No response from the database' });
                         }
                     } else {
-                        res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: error });
+                        res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error });
                     }
                 });
             } else {
-                res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
+                res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
             }
         } catch (error) {
-            res.send({ status: Constants.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
+            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
     }
 

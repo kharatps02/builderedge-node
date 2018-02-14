@@ -1,0 +1,73 @@
+extends layout
+block style
+  style.
+    label.error {color:#FF0000 !important; font-size:13px !important; padding:0px !important; font-weight: normal !important;}
+    small {margin-left: 10px;}
+    .custom-bullet{padding-left: 15px;}
+    .custom-bullet li {
+    display: block;
+    }
+    .custom-bullet li:before{
+    /*Using a Bootstrap glyphicon as the bullet point*/
+    content: "\e080";
+    font-family: 'Glyphicons Halflings';
+    font-size: 9px;
+    float: left;
+    margin-top: 4px;
+    margin-left: -17px;
+    color: #CCCCCC;
+    }
+    .form-inline .norm-label{font-weight: normal;}
+    .form-inline .submitbtn{display: block;margin-top:15px;}
+    .form-inline label.error{display: block;}
+
+block content
+  body
+    .container
+      .page-header
+        h1
+          | Step2 
+          small BuilderEdge Webform registration
+      .row
+        .col-md-12
+          .panel.panel-default
+            .panel-body
+              if appVersion
+                form.form-inline(name='userInfoForm', action='/'+appVersion+'/registerUserWithVanityText', method='POST')
+                  .form-group
+                    ul.custom-bullet
+                      li Please enter your company name. This will appear in your webform URL
+                      li This will be the link that your customers see when the webform is open
+                      li Please do not use any blank spaces in the name
+                    label(for='inputEmail') Webform URL: 
+                    label.norm-label
+                      span#dynamicBaseURL
+                    label.norm-label /1.4/BuilderEdge/
+                    input#customerName.form-control(type='text', name='customerName', placeholder='', maxlength='150')
+                    label.norm-label /
+                    input#orgId.form-control(type='hidden', name='orgId' value=orgId)
+                  button.btn.btn-primary.submitbtn(type='submit') Submit
+              else
+                form.form-inline(name='userInfoForm', action='/registerUserWithVanityText', method='POST')
+                  .form-group
+                    ul.custom-bullet
+                      li Please enter your company name. This will appear in your webform URL
+                      li This will be the link that your customers see when the webform is open
+                      li Please do not use any blank spaces in the name
+                    label(for='inputEmail') Webform URL:  
+                    label.norm-label
+                      span#dynamicBaseURL
+                    label.norm-label /BuilderEdge/
+                    input#customerName.form-control(type='text', name='customerName', placeholder='', maxlength='150')
+                    label.norm-label /
+                    input#orgId.form-control(type='hidden', name='orgId' value=orgId)
+                  button.btn.btn-primary.submitbtn(type='submit') Submit
+  //- script(src='/common/js/jquery-3.1.0.min.js')
+  script(src='http://code.jquery.com/jquery-3.3.1.min.js')
+
+  //- script(src='/common/js/bootstrap.min.js')
+  script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
+    //- script(src='/common/js/configuration.js')
+  //- script(src='/common/js/jquery.validate.min.js')
+  script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js')
+    //- script(src='/common/js/registrationPageValidation.js?v=1.0')

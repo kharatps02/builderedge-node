@@ -59,8 +59,10 @@ export class Server {
 
     // configure pug
     this.app.set("views", path.join(__dirname, "views"));
-    this.app.engine('html', require('ejs').renderFile);
-    this.app.set("view engine", "html");
+    // this.app.engine('html', require('ejs').renderFile);
+    // this.app.set("view engine", "html");
+    // this.app.engine('html', require('ejs').renderFile);
+    this.app.set('view engine', 'jade');
 
     this.app.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");

@@ -1,3 +1,4 @@
+import { Authentication } from './../../core/authentication/authentication';
 import { IOrgMaster, OrgMasterModel } from './../org-master/org-master.model';
 import { CometD } from "cometd";
 import * as nforce from "nforce";
@@ -8,10 +9,12 @@ import * as request from 'request';
  * @description Publish service can be used to publish data to salesforce.
  */
 export class PubService {
+    private authenticator: Authentication;
     private orgMasterModel: OrgMasterModel;
 
     constructor() {
         this.orgMasterModel = new OrgMasterModel();
+        this.authenticator = new Authentication();
     }
     /**
      * @description Gets Org config for the given org Id.
@@ -50,7 +53,7 @@ export class PubService {
                 refresh_token: userOrgDetails.refresh_token,
             });
 
-            this.authenticateAndRun(userOrgDetails, (error: any, response: request.Response) => {
+            this.authenticator.authenticateAndRun(userOrgDetails, (error: any, response: request.Response) => {
                 org.oauth = response.toJSON().body;
                 console.log(org.oauth.instance_url);
                 const event = nforce.createSObject(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME);
@@ -68,27 +71,5 @@ export class PubService {
             });
         });
 
-    }
-    private authenticateAndRun(orgConfig: IOrgMaster, callback: (error: any, response: request.Response) => void) {
-        const serviceUserAuthConfig = {
-            grant_type: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.grant_type,
-            client_id: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_id,
-            client_secret: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_secret,
-            refresh_token: orgConfig.refresh_token,
-        };
-        const requestObj = {
-            url: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.url,
-            qs: serviceUserAuthConfig,
-            method: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.method,
-            json: true,
-        };
-        return request.post(requestObj, (error, response) => {
-            if (error) {
-                console.error('In postRequestOnSalesforce', error);
-            }
-            if (callback) {
-                callback(error, response);
-            }
-        });
     }
 }

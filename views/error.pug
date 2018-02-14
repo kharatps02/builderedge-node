@@ -1,0 +1,12 @@
+extends layout
+
+block content
+  if viewData
+    h1= viewData.message
+    h2= viewData.status
+    pre #{viewData.error.stack}
+  else if error
+    h1= error.message
+    h2= error.status
+    pre #{error.stack}
+

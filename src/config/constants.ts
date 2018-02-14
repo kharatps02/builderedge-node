@@ -8,10 +8,6 @@ export namespace Constants {
         ssl: true,
     };
 
-    export const RESPONSE_STATUS = {
-        SUCCESS: 'SUCCESS',
-        ERROR: 'ERROR',
-    };
     export const MESSAGES = {
         SAVED: 'Data saved successfully',
         UPDATED: 'Data updated successfully',
@@ -26,6 +22,15 @@ export namespace Constants {
     }
     export const COMETD = {
         LOG_MODE: process.env.COMETD_LOG_MODE || COMETD_LOG_MODES.ERROR,
+    };
+    export const OAUTH = {
+        url: process.env.OAUTH_URL || 'https://ap5.salesforce.com/services/oauth2/token',
+        grant_type: process.env.OAUTH_GRANT_TYPE || "refresh_token",
+        client_id: process.env.OAUTH_CLIENT_ID || "3MVG9d8..z.hDcPJvS1kmRShyWMlrH2GkDXefwC.1dAylEi0bWd3yh6Q7xOlp3_9Ex9XAj_MJBiHPbtQ7YwKu",
+        client_secret: process.env.OAUTH_CLIENT_SECRET || "6637042274278747657",
+        // This URI was set at Salesforce OAuth Configuration
+        redirectUri: process.env.OAUTH_REDIRECT_URI || 'https://www.google.co.in/',
+        method: process.env.OAUTH_METHOD || 'POST',
     };
     /**
      * Platform events configuration along with OAUTH config.
