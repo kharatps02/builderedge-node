@@ -14,14 +14,13 @@ export class RegisterOrgRoutes {
 
     get routes() {
         const router = express.Router();
-        // POC1
-        router.get('/', this.registerOrgController.index);
-        router.get('/register', this.registerOrgController.registerIndex);
-        router.get('/register/:isSandBoxUser', this.registerOrgController.register);
+        // router.get('/', this.registerOrgController.index);
+        router.get('/register', this.registerOrgController.registerIndex.bind(this.registerOrgController));
+        router.get('/register/:isSandBoxUser', this.registerOrgController.register.bind(this.registerOrgController));
         // router.get('/registerUser/:orgid', this.registerOrgController.registerUser);
-        router.get('/authorizeUser', this.registerOrgController.authorizeUser);
-        router.get('/oauth/callback', this.registerOrgController.oAuthCallback);
-        router.get('/registeredSuceessfully/:vanityurltext', this.registerOrgController.registeredSuccessfully);
+        router.get('/authorizeUser', this.registerOrgController.authorizeUser.bind(this.registerOrgController));
+        router.get('/oauth/callback', this.registerOrgController.oAuthCallback.bind(this.registerOrgController));
+        router.get('/registeredSuccessfully/:vanityKey', this.registerOrgController.registeredSuccessfully.bind(this.registerOrgController));
         // router.get('/isRegisteredUser', this.registerOrgController.isRegisteredUser);
         // router.get('/registerUserWithVanityText', this.registerOrgController.registerUserWithVanityText);
 

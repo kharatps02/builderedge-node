@@ -42,14 +42,14 @@ export class PubService {
         this.getUserOrgConfig(orgId, (userOrgDetails) => {
 
             const org = nforce.createConnection({
-                clientId: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_id,
-                clientSecret: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.client_secret,
-                redirectUri: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.redirectUri,
+                clientId: Constants.OAUTH.client_id,
+                clientSecret: Constants.OAUTH.client_secret,
+                redirectUri: Constants.OAUTH.redirectUri,
                 // redirectUri: 'http://localhost:3000/oauth/_callback',
                 apiVersion: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.API_VERSION,  // optional, defaults to current salesforce API version
                 environment: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.ENV,  // optional, salesforce 'sandbox' or 'production', production default
                 mode: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.MODE, // optional, 'single' or 'multi' user mode, multi default
-                grant_type: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.OAUTH.grant_type,
+                grant_type: Constants.OAUTH.grant_type,
                 refresh_token: userOrgDetails.refresh_token,
             });
 

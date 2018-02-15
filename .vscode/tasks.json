@@ -11,6 +11,12 @@
             "problemMatcher": [
                 "$tsc-watch"
             ]
+        },
+        {
+            "label": "grunt",
+            "type": "npm",
+            "script": "grunt",
+            "problemMatcher": []
         }
     ]
 }

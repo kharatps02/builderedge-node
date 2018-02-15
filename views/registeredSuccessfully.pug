@@ -26,24 +26,25 @@ block content
     .container
       .page-header
         h1
-          | Step3 
+          | Step2 
           small BuilderEdge Webform registration
       .row
         .col-md-12
           .panel.panel-default
             .panel-body
-                //- form.form-inline(name='userInfoForm', action='/sync/initial/' + vanityKey, method='GET')
+                form.form-inline(name='userInfoForm', action='/sync/initial/' + vanityKey, method='POST')
                     .form-group
-                h3  Please wait while we sync the initial data.
-                p   loading... Loader will appear here.
+                    h3  Congratulations, You have been successfully registered.
+                    p   Please click Next to start the initial sync.
                     input#appUrl.form-control(type='hidden', name='appUrl' value=appUrl)
-                    //- button.btn.btn-primary.submitbtn(type='submit') Done!
-    //- script(src='/common/js/jquery-3.1.0.min.js')
-    script(src='http://code.jquery.com/jquery-3.3.1.min.js')
+                    input#accessToken.form-control(type='hidden', name='accessToken' value=accessToken)
+                    button.btn.btn-primary.submitbtn(type='submit') Next
+  //- script(src='/common/js/jquery-3.1.0.min.js')
+  script(src='http://code.jquery.com/jquery-3.3.1.min.js')
 
-    //- script(src='/common/js/bootstrap.min.js')
-    script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
-    script(src='/data-sync.js')
-    //- script(src='/common/js/jquery.validate.min.js')
-    script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js')
+  //- script(src='/common/js/bootstrap.min.js')
+  script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
+    //- script(src='/common/js/configuration.js')
+  //- script(src='/common/js/jquery.validate.min.js')
+  script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js')
     //- script(src='/common/js/registrationPageValidation.js?v=1.0')

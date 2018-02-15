@@ -26,7 +26,21 @@ export class OrgMasterModel {
             callback(error1, results.rows);
         });
     }
-
+    public getOrgConfigByVanityId(vanityId: string, callback: (error: Error, config: IOrgMaster) => void) {
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+        pgClient.connect();
+        const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like vanity_id || '%'";
+        const orgConfigMap = new Map<string, any>();
+        pgClient.query(queryString, [vanityId], (error1, results) => {
+            pgClient.end();
+            // console.log(results.rows[0]);
+            if (!error1 && results && results.rows.length > 0) {
+                callback(error1, results.rows[0]);
+            } else {
+                callback(error1, null);
+            }
+        });
+    }
     public getOrgConfigByOrgId(orgId: string, callback: (error: Error, config: IOrgMaster) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();

@@ -4,6 +4,7 @@ import * as pg from 'pg';
 import { Constants } from '../../config/constants';
 import { utils } from '../../utils/utils';
 import { RegisterOrgDataModel } from './register-org.datamodel';
+
 pg.defaults.ssl = true;
 pg.defaults.poolSize = 20;
 // var jsforce = require('jsforce'),
@@ -81,18 +82,25 @@ export class RegisterOrgController {
                 isSandBoxUser = 'true';
             }
             try {
-                const result = await this.dataModel.oAuthCallback(encryptedORGID, encryptedRefreshToken, instanceUrl, grantedUserId);
+                const result = await this.dataModel.oAuthCallback(encryptedORGID, encryptedRefreshToken,
+                    instanceUrl, grantedUserId, conn.accessToken);
                 response.redirect('/registeredSuccessfully/' + result);
+
             } catch (error) {
                 response.render('error', { title: 'Error', viewData: error });
             }
         });
     }
     public async registeredSuccessfully(request: express.Request, response: express.Response, next: express.NextFunction) {
-        const vanityurltext = request.params.vanityurltext;
+        const vanityKey = request.params.vanityKey;
         try {
-            const result = await this.dataModel.registeredSuccessfully(vanityurltext);
-            response.render('data-sync', { redirectTo: `${result.api_base_url}/apex/GanttChart` });
+            const result = await this.dataModel.registeredSuccessfully(vanityKey);
+            // All is good. Print the body
+
+            // TODO: INITIATE THE PROCESS HERE
+            // Start sync and pass the event.
+            // Then Redirect to salesforce
+            response.render('registeredSuccessfully', { accessToken: result.access_token, vanityKey, appUrl: `${result.api_base_url}/apex/GanttChart` });
             // response.redirect(`${result.api_base_url}/apex/GanttChart`);
         } catch (error) {
             response.render('error', { title: 'Error', viewData: error });

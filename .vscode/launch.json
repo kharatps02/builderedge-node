@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "nodemon",
             "runtimeExecutable": "nodemon",
-            "preLaunchTask": "build",
+            "preLaunchTask": "grunt",
             "program": "${workspaceFolder}/bin/www",
             "restart": true,
             "console": "integratedTerminal",
@@ -18,7 +18,7 @@
         {
             "type": "node",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "grunt",
             "restart": true,
             "name": "Launch Program",
             "program": "${workspaceFolder}\\bin\\www",

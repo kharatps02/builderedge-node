@@ -1,11 +1,12 @@
 import * as bodyParser from "body-parser";
 import * as errorHandler from "errorhandler";
 import * as express from "express";
+import * as cookieParser from "cookie-parser";
 import * as logger from "morgan";
 import * as path from "path";
 
 import { BaseRoutes } from './config/routes/base.routes';
-import { SubController } from "./app/db-sync/sub-controller";
+import { SyncController } from "./app/db-sync/sync-controller";
 
 /**
  * The server.
@@ -44,7 +45,7 @@ export class Server {
     this.routes();
 
     // Start the sub controller. This subscribes the salesforce endpoints event.
-    new SubController().init();
+    new SyncController().init();
   }
 
   /**
@@ -54,15 +55,16 @@ export class Server {
    * @method config
    */
   public config() {
+    this.app.use(cookieParser());
+    this.app.engine('pug', require('pug').__express);
     // add static paths
-    this.app.use(express.static(path.join(__dirname, "public")));
-
     // configure pug
     this.app.set("views", path.join(__dirname, "views"));
+    this.app.set('view engine', 'pug');
     // this.app.engine('html', require('ejs').renderFile);
     // this.app.set("view engine", "html");
     // this.app.engine('html', require('ejs').renderFile);
-    this.app.set('view engine', 'jade');
+    this.app.use(express.static(path.join(__dirname, "public")));
 
     this.app.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
