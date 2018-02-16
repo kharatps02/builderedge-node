@@ -1,9 +1,10 @@
+import { IOrgMaster } from './../../core/models/org-master';
 import * as express from "express";
 import * as request from 'request';
 import * as async from 'async';
 
 import { ProjectModel, IProjectRequest, IProjectDetails, ITaskDetails } from './project.model';
-import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
+import { OrgMasterModel } from '../org-master/org-master.model';
 import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements, swapSfId } from './project.helper';
 import { Constants } from '../../config/constants';
 import { PubService } from "../db-sync/pub-service";
@@ -30,7 +31,7 @@ export class ProjectController {
                     },
                 };
                 const orgId = req.body.org_id;
-                this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config: IOrgMaster) => {
+                this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config?: IOrgMaster) => {
                     if (!error && config) {
                         request(config.api_base_url + '/services/apexrest/ProductService', requestHeader, (error1, response) => {
                             if (!error1) {
@@ -46,8 +47,9 @@ export class ProjectController {
                                         formatedProjects.map((self) => {
                                             self['OrgMaster_Ref_Id'] = config.vanity_id;
                                         });
-                                        this.syncSalesforceUserDetails(
-                                            { org_id: req.body.session_id, session_id: req.body.session_id }, formatedProjects);
+                                        // DO NOT INSERT/UPDATE since it's taken care by the SPE and registration process.
+                                        // this.syncSalesforceUserDetails(
+                                        //     { org_id: req.body.session_id, session_id: req.body.session_id }, formatedProjects);
                                         res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
                                     }
                                 }
@@ -82,17 +84,17 @@ export class ProjectController {
                 const asyncTasks = [];
                 const data = req.body.Data__c;
                 console.log("data received from SF", data);
-                const queryConfigArray = [];
+                const queryConfigArray: any[] = [];
 
                 if (data.Projects && data.Projects.length > 0) {
-                    data.Projects.forEach((project) => {
+                    data.Projects.forEach((project: IProjectDetails) => {
                         const queryConfig = buildUpdateStatements(project, true);
                         queryConfigArray.push(queryConfig);
                     });
                 }
 
                 if (data.ProjectTasks && data.ProjectTasks.length > 0) {
-                    data.ProjectTasks.forEach((task) => {
+                    data.ProjectTasks.forEach((task: ITaskDetails) => {
                         const queryConfig = buildUpdateStatements(task, false);
                         queryConfigArray.push(queryConfig);
                     });
@@ -154,8 +156,8 @@ export class ProjectController {
      * @param data
      * @param callback
      */
-    public postRequestOnSalesforce(params: { org_id: string, session_id: string }, data, callback?: (error: Error, results: any) => void) {
-        this.orgMasterModel.getOrgConfigByOrgId(params.org_id, (error, config: IOrgMaster) => {
+    public postRequestOnSalesforce(params: { org_id: string, session_id: string }, data: any, callback?: (error: Error, results: any) => void) {
+        this.orgMasterModel.getOrgConfigByOrgId(params.org_id, (error, config?: IOrgMaster) => {
             if (!error && config) {
                 const requestObj = {
                     url: config.api_base_url + '/services/data/v40.0/sobjects/ProjectTaskService__e',
@@ -184,7 +186,7 @@ export class ProjectController {
      * @param params
      * @param salesforceResponseArray
      */
-    public syncSalesforceUserDetails(params: { org_id: string, session_id: string }, salesforceResponseArray) {
+    public syncSalesforceUserDetails(params: { org_id: string, session_id: string }, salesforceResponseArray: any[]) {
         const that = this;
         try {
             const projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
@@ -203,12 +205,12 @@ export class ProjectController {
                 that.projectModel.insertManyStatements(queryConfig, (error, projectResult) => {
                     if (!error) {
                         // console.log('In execMultipleStatment projectResult>>', projectResult);
-                        const salesforceRequestObj = { ProjectTasks: [], Projects: [] };
-                        const pksExternalPksMap = {};
-                        const taskRecords = [];
+                        const salesforceRequestObj: { ProjectTasks: any[], Projects: any[] } = { ProjectTasks: [], Projects: [] };
+                        const pksExternalPksMap: { [key: string]: any } = {};
+                        const taskRecords: ITaskDetails[] = [];
 
                         // Prepared  object to update postgres id into salesforce databse
-                        projectResult.rows.forEach((row) => {
+                        projectResult.rows.forEach((row: any) => {
                             pksExternalPksMap[row.External_Id__c] = row.Id;
                             salesforceRequestObj.Projects.push({ Id: row.External_Id__c, External_Id__c: row.Id });
                         });
@@ -216,7 +218,7 @@ export class ProjectController {
                         salesforceResponseArray.forEach((projectRecord) => {
                             const projectId = pksExternalPksMap[projectRecord['Id']] || projectRecord['External_Id__c'];
                             if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
-                                projectRecord.series.forEach((taskRecord) => {
+                                projectRecord.series.forEach((taskRecord: ITaskDetails) => {
                                     taskRecord['Project__c'] = projectId;
                                     taskRecords.push(taskRecord);
                                 });
@@ -230,7 +232,7 @@ export class ProjectController {
                                     // console.log('In execMultipleStatment task taskResult>>', taskResult);
 
                                     // Prepared  object to update postgres id into salesforce databse
-                                    taskResult.rows.forEach((row) => {
+                                    taskResult.rows.forEach((row: any) => {
                                         salesforceRequestObj.ProjectTasks.push({ Id: row.External_Id__c, External_Id__c: row.Id });
                                     });
                                 } else {
@@ -287,8 +289,8 @@ export class ProjectController {
             if (orgId) {
                 const asyncTasks = [];
                 const records = req.body.records;
-                const queryConfigArray = [];
-                records.forEach((task) => {
+                const queryConfigArray: any[] = [];
+                records.forEach((task: ITaskDetails | IProjectDetails) => {
                     const queryConfig = buildUpdateStatements(task, isProjectRequest);
                     queryConfigArray.push(queryConfig);
                 });
@@ -316,8 +318,8 @@ export class ProjectController {
         }
     }
 
-    public preparedRequestAndUpdateSalesforceDBPOC2(orgId: string, results: any[], isProjectRequest: boolean, callback: (error, eventResponse) => void) {
-        const data = { ProjectTasks: [], Projects: [] };
+    public preparedRequestAndUpdateSalesforceDBPOC2(orgId: string, results: any[], isProjectRequest: boolean, callback: (error: Error, eventResponse: any) => void) {
+        const data: { ProjectTasks: any[], Projects: any[] } = { ProjectTasks: [], Projects: [] };
         if (isProjectRequest) {
             data.Projects = results;
             if (data.Projects) {

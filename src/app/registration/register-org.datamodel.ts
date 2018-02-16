@@ -15,7 +15,7 @@ export class RegisterOrgDataModel {
     /**
      * oAuthCallback
      */
-    public async oAuthCallback(encryptedORGID, encryptedRefreshToken, instanceUrl, grantedUserId, accessToken) {
+    public async oAuthCallback(encryptedORGID: string, encryptedRefreshToken: string, instanceUrl: string, grantedUserId: string, accessToken: string) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         try {
             pgClient.connect();
@@ -26,6 +26,7 @@ export class RegisterOrgDataModel {
             // let webFormLink = '';
             if (result.rows.length === 0) {
                 // SQL Query > Insert Data
+                // tslint:disable-next-line:max-line-length
                 const queryStr = "INSERT INTO org_master(org_id, refresh_token, api_base_url, user_id, event_endpoint_url, access_token) values($1, $2, $3, $4, $5, $6) RETURNING vanity_id";
                 const queryRes = await pgClient.query(queryStr, [encryptedORGID, encryptedRefreshToken, instanceUrl, grantedUserId, instanceUrl + '/cometd/40.0', accessToken]);
                 return queryRes.rows[0].vanity_id;
@@ -58,7 +59,7 @@ export class RegisterOrgDataModel {
     /**
      * registeredSuccessfully
      */
-    public async registeredSuccessfully(vanityKey): Promise<any> {
+    public async registeredSuccessfully(vanityKey: any): Promise<any> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         try {
             pgClient.connect();
@@ -67,7 +68,7 @@ export class RegisterOrgDataModel {
             const result = await pgClient.query(queryStr, [vanityKey]);
             // if user is valid
             if (result.rows.length > 0) {
-                const refreshToken = utils.decryptCipher(result.rows[0].refresh_token, process.env.TOKEN_ENCRIPTION_KEY);
+                const refreshToken = utils.decryptCipher(result.rows[0].refresh_token, '' + process.env.TOKEN_ENCRIPTION_KEY);
                 const instanceurl = result.rows[0].api_base_url;
                 // const isSandBoxUser = result.rows[0].issandboxuser.trim();
 

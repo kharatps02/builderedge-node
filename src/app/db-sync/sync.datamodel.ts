@@ -1,7 +1,8 @@
-import { ProjectModel } from './../project/project.model';
+import { IOrgMaster } from './../../core/models/org-master';
+import { ProjectModel, IProjectDetails, ITaskDetails } from './../project/project.model';
 
 import * as request from "request";
-import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
+import { OrgMasterModel } from '../org-master/org-master.model';
 import { buildInsertStatements } from '../project/project.helper';
 
 export class SyncDataModel {
@@ -17,7 +18,7 @@ export class SyncDataModel {
      * @param params
      * @param salesforceResponseArray
      */
-    public syncSalesforceUserDetails(params: { vanity_id: string, session_id: string }, salesforceResponseArray, callback: (done: boolean) => void) {
+    public syncSalesforceUserDetails(params: { vanity_id: string, session_id: string }, salesforceResponseArray: any[], callback: (done: boolean) => void) {
         const that = this;
         try {
             const projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
@@ -36,20 +37,20 @@ export class SyncDataModel {
                 that.projectModel.insertManyStatements(queryConfig, (error, projectResult) => {
                     if (!error) {
                         // console.log('In execMultipleStatment projectResult>>', projectResult);
-                        const salesforceRequestObj = { ProjectTasks: [], Projects: [] };
-                        const pksExternalPksMap = {};
-                        const taskRecords = [];
+                        const salesforceRequestObj: { ProjectTasks: any[], Projects: any[] } = { ProjectTasks: [], Projects: [] };
+                        const pksExternalPksMap: { [key: string]: any } = {};
+                        const taskRecords: ITaskDetails[] = [];
 
                         // Prepared  object to update postgres id into salesforce databse
-                        projectResult.rows.forEach((row) => {
-                            pksExternalPksMap[row.External_Id__c] = row.Id;
+                        projectResult.rows.forEach((row: IProjectDetails) => {
+                            pksExternalPksMap[row.External_Id__c + ''] = row.Id;
                             salesforceRequestObj.Projects.push({ Id: row.External_Id__c, External_Id__c: row.Id });
                         });
 
                         salesforceResponseArray.forEach((projectRecord) => {
                             const projectId = pksExternalPksMap[projectRecord['Id']] || projectRecord['External_Id__c'];
                             if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
-                                projectRecord.series.forEach((taskRecord) => {
+                                projectRecord.series.forEach((taskRecord: ITaskDetails) => {
                                     taskRecord['Project__c'] = projectId;
                                     taskRecords.push(taskRecord);
                                 });
@@ -63,7 +64,7 @@ export class SyncDataModel {
                                     // console.log('In execMultipleStatment task taskResult>>', taskResult);
 
                                     // Prepared  object to update postgres id into salesforce databse
-                                    taskResult.rows.forEach((row) => {
+                                    taskResult.rows.forEach((row: ITaskDetails) => {
                                         salesforceRequestObj.ProjectTasks.push({ Id: row.External_Id__c, External_Id__c: row.Id });
                                     });
                                 } else {
@@ -115,8 +116,8 @@ export class SyncDataModel {
      * @param data
      * @param callback
      */
-    public postRequestOnSalesforce(params: { vanity_id: string, session_id: string }, data, callback?: (error: Error, results: any) => void) {
-        this.orgMasterModel.getOrgConfigByVanityId(params.vanity_id, (error, config: IOrgMaster) => {
+    public postRequestOnSalesforce(params: { vanity_id: string, session_id: string }, data: any, callback?: (error: Error, results: any) => void) {
+        this.orgMasterModel.getOrgConfigByVanityId(params.vanity_id, (error, config?: IOrgMaster) => {
             if (!error && config) {
                 const requestObj = {
                     url: config.api_base_url + '/services/data/v40.0/sobjects/ProjectTaskService__e',

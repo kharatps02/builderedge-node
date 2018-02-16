@@ -1,4 +1,4 @@
-import { ITaskDetails } from './project.model';
+import { ITaskDetails, IProjectDetails } from './project.model';
 /**
  * @description This function is formatting data as per Gantt chart
  * @param projectArray
@@ -23,7 +23,7 @@ export function formatProjectAndTaskDetails(projectArray: any[]) {
     return newProjectArray;
 }
 
-export function formatTaskDetails(task) {
+export function formatTaskDetails(task: { [key: string]: any }) {
     const newTask = task;
     // newTask['id'] = task['Id'];
     newTask['name'] = task['Name'] || '';
@@ -43,7 +43,7 @@ export function formatTaskDetails(task) {
     // newTask['project_ref_id'] = task['Project__c'];
     return newTask;
 }
-export function formatProjectDetails(project) {
+export function formatProjectDetails(project: { [key: string]: any, series: any[] }) {
     const newProject = project;
     // newProject['id'] = project['Id'];
     newProject['name'] = project['Name'] || '';
@@ -63,16 +63,18 @@ export function formatProjectDetails(project) {
     return newProject;
 }
 
-export function buildInsertStatements(rows, returnFieldArr = [], isProjectRequest: boolean = true) {
-    const params = [];
-    const chunks = [];
+export function buildInsertStatements(rows: any[], returnFieldArr: any[] = [], isProjectRequest: boolean = true, internalOrgId?: string) {
+    const params: any[] = [];
+    const chunks: any[] = [];
     const valueStr = '';
     let insertQueryStr = '';
     let returning = '';
 
+    // tslint:disable-next-line:max-line-length
     insertQueryStr = `INSERT INTO "Project__c" ( "External_Id__c", "Name", "Description__c", "Start_Date__c", "End_Date__c", "Completion_Percentage__c", "Status__c", "CreatedById", "LastModifiedById", "CreatedDate", "LastModifiedDate", "OrgMaster_Ref_Id" ) VALUES `;
 
     if (!isProjectRequest) {
+        // tslint:disable-next-line:max-line-length
         insertQueryStr = `INSERT INTO "Project_Task__c" ( "External_Id__c", "Name", "Description__c", "Start_Date__c", "End_Date__c", "Completion_Percentage__c", "Status__c", "CreatedById", "LastModifiedById", "CreatedDate", "LastModifiedDate", "Project__c" ) VALUES `;
     }
 
@@ -120,7 +122,7 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
             params.push(row.Project__c);
             valueClause.push('$' + params.length);
         } else {
-            params.push(row.OrgMaster_Ref_Id);
+            params.push(row.OrgMaster_Ref_Id || internalOrgId);
             valueClause.push('$' + params.length);
         }
 
@@ -134,9 +136,9 @@ export function buildInsertStatements(rows, returnFieldArr = [], isProjectReques
 }
 
 // Not being used.
-export function formatSalesForceObject(params) {
+export function formatSalesForceObject(params: { [key: string]: any }) {
 
-    const record = {};
+    const record: { [key: string]: any } = {};
 
     if (params.name) {
         record['Name'] = params.name;
@@ -170,12 +172,12 @@ export function formatSalesForceObject(params) {
     }
     return record;
 }
-export function swapSfId(item) {
+export function swapSfId(item: { [key: string]: any }) {
     const externalId = item['External_Id__c'];
     item['External_Id__c'] = item['Id'];
     item['Id'] = externalId;
 }
-export function buildUpdateStatements(params: ITaskDetails, isProject): { text: string, values: any[] } {
+export function buildUpdateStatements(params: ITaskDetails | IProjectDetails, isProject: boolean): { text: string, values: any[] } {
     const queryValues = [];
     const valueClause = [];
 

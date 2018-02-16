@@ -1,6 +1,7 @@
 import { Client } from 'pg';
 import { Constants } from '../../config/constants';
 import { error } from 'util';
+import { IOrgMaster } from '../../core/models/org-master';
 
 /**
  * @description Handles all database functions for OrgMaster table
@@ -26,7 +27,7 @@ export class OrgMasterModel {
             callback(error1, results.rows);
         });
     }
-    public getOrgConfigByVanityId(vanityId: string, callback: (error: Error, config: IOrgMaster) => void) {
+    public getOrgConfigByVanityId(vanityId: string, callback: (error: Error, config?: IOrgMaster) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like vanity_id || '%'";
@@ -37,11 +38,11 @@ export class OrgMasterModel {
             if (!error1 && results && results.rows.length > 0) {
                 callback(error1, results.rows[0]);
             } else {
-                callback(error1, null);
+                callback(error1, undefined);
             }
         });
     }
-    public getOrgConfigByOrgId(orgId: string, callback: (error: Error, config: IOrgMaster) => void) {
+    public getOrgConfigByOrgId(orgId: string, callback: (error: Error, config?: IOrgMaster) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like ORG_ID || '%'";
@@ -52,17 +53,18 @@ export class OrgMasterModel {
             if (!error1 && results && results.rows.length > 0) {
                 callback(error1, results.rows[0]);
             } else {
-                callback(error1, null);
+                callback(error1, undefined);
             }
         });
     }
-}
-export interface IOrgMaster {
-    vanity_id: string;
-    api_base_url: string;
-    access_token: string;
-    user_id?: string;
-    refresh_token: string;
-    event_endpoint_url: string;
-    org_id: string;
+    public async getOrgConfigByOrgIdAsync(orgId: string): Promise<IOrgMaster | undefined> {
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+        pgClient.connect();
+        const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like ORG_ID || '%'";
+        const orgConfigMap = new Map<string, any>();
+        const result = await pgClient.query(queryString, [orgId]);
+        if (result && result.rows.length > 0) {
+            return result.rows[0];
+        }
+    }
 }

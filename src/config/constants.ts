@@ -10,10 +10,13 @@ export namespace Constants {
         ssl: true,
     };
     export const SYNC_QUERIES = {
+        // tslint:disable-next-line:max-line-length
         ALL: '/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Start_Date__c,Status__c,SystemModstamp,(SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Project__c,Start_Date__c,Status__c,SystemModstamp+FROM+Project_Tasks__r)+FROM+Project__c',
-        PROJECT: (timeStamp) => `/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Start_Date__c,Status__c,SystemModstamp+FROM+Project__c+WHERE+SystemModstamp>=${timeStamp}`,
-        PROJECT_TASK: (timeStamp) => `/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Project__c,Start_Date__c,Status__c,SystemModstamp+FROM+Project_Task__c+WHERE+SystemModstamp>=${timeStamp}`,
-    }
+        // tslint:disable-next-line:max-line-length
+        PROJECT: (timeStamp: any) => `/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Start_Date__c,Status__c,SystemModstamp+FROM+Project__c+WHERE+SystemModstamp>=${timeStamp}`,
+        // tslint:disable-next-line:max-line-length
+        PROJECT_TASK: (timeStamp: any) => `/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Project__c,Start_Date__c,Status__c,SystemModstamp+FROM+Project_Task__c+WHERE+SystemModstamp>=${timeStamp}`,
+    };
     export const MESSAGES = {
         SAVED: 'Data saved successfully',
         UPDATED: 'Data updated successfully',

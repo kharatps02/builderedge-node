@@ -1,13 +1,15 @@
+import { IOrgMaster } from './../../core/models/org-master';
 import { Authentication } from './../../core/authentication/authentication';
 import * as request from 'request';
 import * as lib from "cometd";
 import { Constants } from '../../config/constants';
 import * as cometDNode from 'cometd-nodejs-client';
-import { OrgMasterModel, IOrgMaster } from '../org-master/org-master.model';
+import { OrgMasterModel } from '../org-master/org-master.model';
 import { ProjectModel } from '../project/project.model';
 import { ProjectController } from '../project/project.controller';
 import { buildUpdateStatements, formatProjectDetails, formatTaskDetails, buildInsertStatements } from '../project/project.helper';
 import { PubService } from './pub-service';
+import { IOAuthToken } from '../../core/authentication/oauth-model';
 
 export class SubService {
     private authenticator: Authentication;
@@ -28,12 +30,12 @@ export class SubService {
      * @description Subscribes the event at the salesforce side and performs actions based on the event triggerred.
      */
     public config(orgConfig: IOrgMaster) {
-        this.authenticator.authenticateAndRun(orgConfig, (error: any, response: request.Response) => {
-            if (error || !response) {
-                console.log('Authentication failed', error, response);
+        this.authenticator.authenticateAndRun(orgConfig, (error: any, token?: IOAuthToken) => {
+            if (error || !token) {
+                console.log('Authentication failed', error, token);
                 return;
             }
-            this.sessionId = response.toJSON().body.access_token;
+            this.sessionId = token.access_token;
             // Configure the CometD object.
             this.cometd.configure({
                 url: orgConfig.event_endpoint_url,
@@ -61,12 +63,13 @@ export class SubService {
         });
     }
 
-    private updateDB(payload) {
+    private async updateDB(payload: any) {
         const temp = true;
         let isProjectRequest = true;
-        let records = [];
+        let records: any[] = [];
         let data = payload.Data__c;
-        const orgId = payload.OrgId__c;
+        const orgId = payload.OrgId__c
+        const internalOrg = await this.orgMasterModel.getOrgConfigByOrgIdAsync(payload.OrgId__c);
 
         if (typeof payload.Data__c === 'string') {
             data = JSON.parse(data);
@@ -100,7 +103,7 @@ export class SubService {
 
             if (records && records.length > 0) {
                 if (payload.Action__c === 'update') {
-                    const queryConfigArray = [];
+                    const queryConfigArray: any[] = [];
                     records.forEach((task) => {
                         const queryConfig = buildUpdateStatements(task, isProjectRequest);
                         queryConfigArray.push(queryConfig);
@@ -114,7 +117,7 @@ export class SubService {
                     });
                 } else {
                     // Insert here
-                    const queryConfig = buildInsertStatements(records, ['"Id"', '"External_Id__c"'], isProjectRequest);
+                    const queryConfig = buildInsertStatements(records, ['"Id"', '"External_Id__c"'], isProjectRequest, internalOrg!.vanity_id);
 
                     this.projectModel.insertManyStatements(queryConfig, (error, results) => {
                         console.log(error, results);
@@ -122,11 +125,10 @@ export class SubService {
                             console.log("Inserted to the database from Subscribe (SPE).");
                             if (results.rows && results.rows.length > 0) {
                                 const pubservice = new PubService();
-                                results.rows.forEach((r) => {
+                                results.rows.forEach((r: any) => {
+                                    const id = r['Id']
                                     r['Id'] = r.External_Id__c;
-                                    r['External_Id__c'] = r.Id;
-                                    delete r.Id;
-                                    delete r.External_Id__c;
+                                    r['External_Id__c'] = id;
                                 });
                                 let pubData = null;
                                 if (isProjectRequest) {

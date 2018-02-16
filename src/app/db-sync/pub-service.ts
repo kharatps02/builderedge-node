@@ -1,9 +1,11 @@
+import { IOrgMaster } from './../../core/models/org-master';
 import { Authentication } from './../../core/authentication/authentication';
-import { IOrgMaster, OrgMasterModel } from './../org-master/org-master.model';
+import { OrgMasterModel } from './../org-master/org-master.model';
 import { CometD } from "cometd";
 import * as nforce from "nforce";
 import { Constants } from "../../config/constants";
 import * as request from 'request';
+import { IOAuthToken } from '../../core/authentication/oauth-model';
 
 /**
  * @description Publish service can be used to publish data to salesforce.
@@ -53,8 +55,8 @@ export class PubService {
                 refresh_token: userOrgDetails.refresh_token,
             });
 
-            this.authenticator.authenticateAndRun(userOrgDetails, (error: any, response: request.Response) => {
-                org.oauth = response.toJSON().body;
+            this.authenticator.authenticateAndRun(userOrgDetails, (error: any, oAuthToken: IOAuthToken | undefined) => {
+                org.oauth = oAuthToken;
                 console.log(org.oauth.instance_url);
                 const event = nforce.createSObject(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME);
                 event.set('Data__c', data);

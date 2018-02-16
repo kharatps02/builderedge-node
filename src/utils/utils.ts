@@ -2,11 +2,11 @@ import { ConnectionError } from './errors';
 import { Client } from "pg";
 
 export namespace utils {
-    export function encryptCipher(data, encryptionKey): string {
+    export function encryptCipher(data: string, encryptionKey: string): string {
         // TODO: write encryption logic here
         return data;
     }
-    export function decryptCipher(data, encryptionKey): string {
+    export function decryptCipher(data: string, encryptionKey: string): string {
         // TODO: write decryption logic here
         return data;
     }

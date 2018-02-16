@@ -24,7 +24,7 @@ export class ProjectModel {
     }
 
     public updateProjectsOrTasks(projectTaskQueryArray: any[], callback: (error: Error, results: any) => void) {
-        const asyncTasks = [];
+        const asyncTasks: Array<async.AsyncFunction<any, any>> = [];
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
 
@@ -64,12 +64,12 @@ export class ProjectModel {
     /**
      * getProjectId
      */
-    public getProjectIdByExternalId(externalId: string, callback: (projectId) => void) {
+    public getProjectIdByExternalId(externalId: string, callback: (projectId: number) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         pgClient.query('SELECT "Id" from "Project__c" WHERE "External_Id__c" = $1', [externalId], (err, results) => {
             pgClient.end();
-            callback(results[0]);
+            callback(results.rows[0].Id);
         });
     }
 }
