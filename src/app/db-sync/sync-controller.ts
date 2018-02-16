@@ -23,6 +23,10 @@ export class SyncController {
     this.subscribers = new Map();
     this.orgMasterModel = new OrgMasterModel();
     this.syncDataModel = new SyncDataModel();
+    this.eventBus.addListener('orgSynched', (vanityId: string) => {
+      console.log('Subscribing to the new org', vanityId);
+      this.addNewOrgToSubscribers(vanityId);
+    })
   }
   /**
    * events
@@ -42,7 +46,18 @@ export class SyncController {
       }
       results.forEach((org) => {
         this.subscribers.set(org.org_id, new SubService(org));
+
       });
+    });
+  }
+  /**
+   * addNewOrgToSubscribers
+   */
+  public addNewOrgToSubscribers(vanityId: string) {
+    this.orgMasterModel.getOrgConfigByVanityId(vanityId, (error, config) => {
+      if (config) {
+        this.subscribers.set(config.org_id, new SubService(config));
+      }
     });
   }
   /**
@@ -72,7 +87,7 @@ export class SyncController {
             'Content-Type': 'application/json',
           },
         };
-        this.orgMasterModel.getOrgConfigByVanityId(vanityKey, (error, config: IOrgMaster) => {
+        this.orgMasterModel.getOrgConfigByVanityId(vanityKey, (error, config) => {
           if (!error && config) {
 
             request(config.api_base_url + Constants.SYNC_QUERIES.ALL, requestHeader, (error1, sfResponse) => {
@@ -92,6 +107,7 @@ export class SyncController {
                     this.syncDataModel.syncSalesforceUserDetails(
                       { vanity_id: vanityKey, session_id: accessToken }, formatedProjects, (done) => {
                         if (done) {
+                          this.eventBus.emit('orgSynched', vanityKey);
                           res.render('data-sync', { appUrl });
                           //     res.render('data-sync', { appUrl }, (err, html) => {
                           //     console.log(err, html);
