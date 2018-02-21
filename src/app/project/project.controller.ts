@@ -22,15 +22,16 @@ export class ProjectController {
     //#region POC1
     public getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            if (req.body.session_id && req.body.org_id) {
+            const sessionId = req.headers.session_id || req.body.session_id;
+            const orgId = req.headers.org_id || req.body.org_id;
+            if (sessionId && orgId) {
                 // Get project details from salesforce api
                 const requestHeader = {
                     headers: {
-                        'Authorization': 'Bearer ' + req.body.session_id,
+                        'Authorization': 'Bearer ' + sessionId,
                         'Content-Type': 'application/json',
                     },
                 };
-                const orgId = req.body.org_id;
                 this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config?: IOrgMaster) => {
                     if (!error && config) {
                         request(config.api_base_url + '/services/apexrest/ProductService', requestHeader, (error1, response) => {

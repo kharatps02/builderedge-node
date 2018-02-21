@@ -19,14 +19,16 @@ export class RegisterOrgController {
     constructor() {
         this.dataModel = new RegisterOrgDataModel();
     }
-    public index(request: express.Request, response: express.Response) {
-        response.redirect("/register");
-    }
-    public registerIndex(request: express.Request, response: express.Response) {
-        response.redirect("/register/false");
-    }
+    // public index(request: express.Request, response: express.Response) {
+    //     response.redirect("/register");
+    // }
+    // public registerIndex(request: express.Request, response: express.Response) {
+    //     response.redirect("/register/false");
+    // }
     public register(request: express.Request, response: express.Response) {
         let isSandBoxUser = request.params.isSandBoxUser;
+        const origin = request.query.origin;
+        response.cookie("experience", origin);
         if (isSandBoxUser !== "true") {
             isSandBoxUser = "false";
         }
@@ -68,7 +70,7 @@ export class RegisterOrgController {
         const conn = new jsforce.Connection({ oauth2: request.cookies.oauth2 });
         const appVersion = request.cookies.oauth2.appVersion; // return app version
         const code = request.query.code;
-        conn.authorize(code, async (error, userInfo) => {
+        conn.authorize(code, async (error: Error, userInfo) => {
             if (error) {
                 return next(error);
             }
@@ -94,14 +96,16 @@ export class RegisterOrgController {
     public async registeredSuccessfully(request: express.Request, response: express.Response, next: express.NextFunction) {
         const vanityKey = request.params.vanityKey;
         try {
+            const experience = request.cookies.experience;
             const result = await this.dataModel.registeredSuccessfully(vanityKey);
+            const appUrl = `${result.api_base_url}${experience === 'lightning' ? '/one/one.app?source=aloha#/n/Gantt_Chart' : '/apex/GanttChart'}`;
             // All is good. Print the body
 
             // TODO: INITIATE THE PROCESS HERE
             // Start sync and pass the event.
             // Then Redirect to salesforce
-            response.render('registeredSuccessfully', { accessToken: result.access_token, vanityKey, appUrl: `${result.api_base_url}/apex/GanttChart` });
-            // response.redirect(`${result.api_base_url}/apex/GanttChart`);
+            response.render('registeredSuccessfully', { accessToken: result.access_token, vanityKey, appUrl });
+            // response.redirect(`${ result.api_base_url } / apex / GanttChart`);
         } catch (error) {
             response.render('error', { title: 'Error', viewData: error });
         }

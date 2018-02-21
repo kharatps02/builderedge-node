@@ -1,3 +1,4 @@
+import { SFResponse } from './../db-sync/sf-response';
 import { Client, QueryResult } from 'pg';
 import { error } from 'util';
 import * as async from 'async';
@@ -102,6 +103,7 @@ export interface IProjectDetails {
     CreatedDate?: Date;
     LastModifiedDate?: Date;
     OrgMaster_Ref_Id?: string;
+    Project_Task__c: SFResponse<ITaskDetails>;
     // for Gannt
     records?: ITaskDetails[];
 }
