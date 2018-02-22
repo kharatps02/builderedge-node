@@ -5,7 +5,6 @@ import { SyncController } from './sync-controller';
  * @description Project routs configuration.
  */
 export class SyncRoutes {
-    private routers: express.Router;
     private syncController: SyncController;
     //  private authentication: Authentication;
     constructor() {
@@ -19,8 +18,9 @@ export class SyncRoutes {
         router.get('/sync', this.syncController.index.bind(this.syncController));
         router.get('/events', sse, this.syncController.events.bind(this.syncController));
 
-        router.post('/sync/initial/:vanityKey', this.syncController.syncInitial.bind(this.syncController));
-
+        // router.post('/sync/initial/:vanityKey', this.syncController.syncInitial.bind(this.syncController));
+        router.post('/sync/initial/:vanityKey', this.syncController.syncDataInitial.bind(this.syncController));
+        
         return router;
     }
 }

@@ -31,7 +31,7 @@ export class SyncDataModel {
             // });
 
             if (projectRecords && projectRecords.length > 0) {
-                const queryConfig = buildInsertStatements(projectRecords, ['"Id"', '"External_Id__c"'], true);
+                const queryConfig = buildInsertStatements(projectRecords, ['"Id"', '"External_Id__c"'], true, params.vanity_id);
                 console.log("query statement", queryConfig);
                 // Insert Projects records
                 that.projectModel.insertManyStatements(queryConfig, (error, projectResult) => {
