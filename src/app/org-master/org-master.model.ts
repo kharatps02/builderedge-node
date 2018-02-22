@@ -71,7 +71,7 @@ export class OrgMasterModel {
             }
         });
     }
-    public async getOrgConfigByOrgIdAsync(orgId: string): Promise<IOrgMaster | undefined> {
+    public async getOrgConfigByOrgIdAsync(orgId: string): Promise<IOrgMaster> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like ORG_ID || '%'";
@@ -79,6 +79,8 @@ export class OrgMasterModel {
         const result = await pgClient.query(queryString, [orgId]);
         if (result && result.rows.length > 0) {
             return result.rows[0];
+        } else {
+            throw Error("No record found");
         }
     }
 }

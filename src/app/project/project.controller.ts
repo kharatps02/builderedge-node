@@ -10,66 +10,83 @@ import { Constants } from '../../config/constants';
 import { PubService } from "../db-sync/pub-service";
 import { forEach } from "async";
 import { Enums } from "../../config/enums";
+import { ProjectSfModel } from './project.sfmodel';
 
 export class ProjectController {
+    private projectSfModel: ProjectSfModel;
     private projectModel: ProjectModel;
     private orgMasterModel: OrgMasterModel;
     constructor() {
         this.projectModel = new ProjectModel();
         this.orgMasterModel = new OrgMasterModel();
+        this.projectSfModel = new ProjectSfModel();
+
     }
 
     //#region POC1
-    public getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
+    public async getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const sessionId = req.headers.session_id || req.body.session_id;
             const orgId = req.headers.org_id || req.body.org_id;
-            if (sessionId && orgId) {
-                // Get project details from salesforce api
-                const requestHeader = {
-                    headers: {
-                        'Authorization': 'Bearer ' + sessionId,
-                        'Content-Type': 'application/json',
-                    },
-                };
-                this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config?: IOrgMaster) => {
-                    if (!error && config) {
-                        request(config.api_base_url + '/services/apexrest/ProductService', requestHeader, (error1, response) => {
-                            if (!error1) {
-                                if (response.statusCode === 401) {
-                                    res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: response.body[0].message });
-                                } else {
-                                    if (response.body && response.body.length > 0) {
-                                        let projectArray: IProjectDetails[] = response.body;
-                                        if (typeof response.body === 'string') {
-                                            projectArray = JSON.parse(response.body);
-                                        }
-                                        const formatedProjects = formatProjectAndTaskDetails(projectArray);
-                                        formatedProjects.map((self) => {
-                                            self['OrgMaster_Ref_Id'] = config.vanity_id;
-                                        });
-                                        // DO NOT INSERT/UPDATE since it's taken care by the SPE and registration process.
-                                        // this.syncSalesforceUserDetails(
-                                        //     { org_id: req.body.session_id, session_id: req.body.session_id }, formatedProjects);
-                                        res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
-                                    }
-                                }
-                            } else {
-                                res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error1 });
-                            }
-                        });
-                    } else {
-                        res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error });
-                    }
-                });
-            } else {
-                res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
-            }
-        } catch (e) {
-            console.log(e);
-            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
+            const data = await this.projectSfModel.getAllProjectsAndTasks(sessionId, undefined, orgId);
+            const formatedProjects = formatProjectAndTaskDetails(
+                data.records
+            );
+            res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
+        } catch (err) {
+            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err });
         }
     }
+    // public getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
+    //     try {
+    //         const sessionId = req.headers.session_id || req.body.session_id;
+    //         const orgId = req.headers.org_id || req.body.org_id;
+    //         if (sessionId && orgId) {
+    //             // Get project details from salesforce api
+    //             const requestHeader = {
+    //                 headers: {
+    //                     'Authorization': 'Bearer ' + sessionId,
+    //                     'Content-Type': 'application/json',
+    //                 },
+    //             };
+    //             this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config?: IOrgMaster) => {
+    //                 if (!error && config) {
+    //                     request(config.api_base_url + '/services/apexrest/ProductService', requestHeader, (error1, response) => {
+    //                         if (!error1) {
+    //                             if (response.statusCode === 401) {
+    //                                 res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: response.body[0].message });
+    //                             } else {
+    //                                 if (response.body && response.body.length > 0) {
+    //                                     let projectArray: IProjectDetails[] = response.body;
+    //                                     if (typeof response.body === 'string') {
+    //                                         projectArray = JSON.parse(response.body);
+    //                                     }
+    //                                     const formatedProjects = formatProjectAndTaskDetails(projectArray);
+    //                                     formatedProjects.map((self) => {
+    //                                         self['OrgMaster_Ref_Id'] = config.vanity_id;
+    //                                     });
+    //                                     // DO NOT INSERT/UPDATE since it's taken care by the SPE and registration process.
+    //                                     // this.syncSalesforceUserDetails(
+    //                                     //     { org_id: req.body.session_id, session_id: req.body.session_id }, formatedProjects);
+    //                                     res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
+    //                                 }
+    //                             }
+    //                         } else {
+    //                             res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error1 });
+    //                         }
+    //                     });
+    //                 } else {
+    //                     res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error });
+    //                 }
+    //             });
+    //         } else {
+    //             res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
+    //         }
+    //     } catch (e) {
+    //         console.log(e);
+    //         res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
+    //     }
+    // }
 
     /**
      * @description Function to updates Projects or Tasks

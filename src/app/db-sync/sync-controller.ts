@@ -1,3 +1,4 @@
+import { ProjectSfModel } from './../project/project.sfmodel';
 import { ISFResponse, SFResponse } from "./sf-response";
 import { SyncDataModel } from "./sync.datamodel";
 import { IProjectDetails } from "./../project/project.model";
@@ -17,6 +18,7 @@ import { IOrgMaster } from "../../core/models/org-master";
  * @description It gets all orgs and its integration user OAuth Token to be used for the subscription.
  */
 export class SyncController {
+  private projectSfModel: ProjectSfModel;
   private syncDataModel: SyncDataModel;
   private subscribers: Map<string, SubService>;
   private orgMasterModel: OrgMasterModel;
@@ -25,6 +27,7 @@ export class SyncController {
     this.subscribers = new Map();
     this.orgMasterModel = new OrgMasterModel();
     this.syncDataModel = new SyncDataModel();
+    this.projectSfModel = new ProjectSfModel();
     this.eventBus.addListener("orgSynched", (vanityId: string) => {
       console.log("Subscribing to the new org", vanityId);
       this.addNewOrgToSubscribers(vanityId);
@@ -53,7 +56,7 @@ export class SyncController {
       if (error1) {
         return;
       }
-      results.forEach(org => {
+      results.forEach((org) => {
         this.subscribers.set(org.org_id, new SubService(org));
       });
     });
@@ -95,7 +98,7 @@ export class SyncController {
         // Get project details from salesforce api
         const requestHeader = {
           headers: {
-            Authorization: "Bearer " + accessToken,
+            "Authorization": "Bearer " + accessToken,
             "Content-Type": "application/json"
           }
         };
@@ -105,7 +108,7 @@ export class SyncController {
             if (!error && config) {
               let sfResponsePerRequest: ISFResponse<
                 IProjectDetails
-              > = new SFResponse<IProjectDetails>();
+                > = new SFResponse<IProjectDetails>();
 
               const url =
                 sfResponsePerRequest.nextRecordsUrl ||
@@ -154,7 +157,7 @@ export class SyncController {
                 this.syncDataModel.syncSalesforceUserDetails(
                   { vanity_id: vanityKey, session_id: accessToken },
                   formatedProjects,
-                  done => {
+                  (done) => {
                     if (done && sfResponsePerRequest.done) {
                       this.eventBus.emit("orgSynched", vanityKey);
                       res.render("data-sync", { appUrl });
@@ -216,126 +219,50 @@ export class SyncController {
       // res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
     }
   }
-  /**
-   * getAllProjectsAndTasks
-   */
-  private async getAllProjectsAndTasks(
-    vanityKey: string,
-    accessToken: string
-  ): Promise<ISFResponse<IProjectDetails>> {
-    try {
-      const config = await this.orgMasterModel.getOrgConfigByVanityId(
-        vanityKey
-      );
-      let sfResponsePerRequest: ISFResponse<IProjectDetails> = new SFResponse<
-        IProjectDetails
-      >();
-      const url =
-        sfResponsePerRequest.nextRecordsUrl ||
-        config.api_base_url + Constants.SYNC_QUERIES.ALL;
-      sfResponsePerRequest = await this.getData<IProjectDetails>(
-        url,
-        accessToken,
-        undefined,
-        config.api_base_url
-      );
-      for (const element of sfResponsePerRequest.records) {
-        // TODO: Fix:  StatusCodeError: 400 - "[{\"message\":\"invalid query locator\",\"errorCode\":\"INVALID_QUERY_LOCATOR\"}]"
-        element.Project_Tasks__r = await this.getData(
-          config.api_base_url + element.Project_Tasks__r.nextRecordsUrl!,
-          accessToken,
-          element.Project_Tasks__r.records,
-          config.api_base_url
-        );
-      }
-      return sfResponsePerRequest;
-    } catch (error) {
-      throw error;
-    }
-  }
 
   public async syncDataInitial(
     req: express.Request,
     res: express.Response,
-    next: express.NextFunction
+    next: express.NextFunction,
   ) {
     const accessToken = req.body.accessToken;
     const vanityKey = req.params.vanityKey;
     const appUrl = req.body.appUrl;
-    const formatedProjects = await this.getAllProjectsAndTasks(
-      vanityKey,
-      accessToken
-    );
-    this.syncDataModel.syncSalesforceUserDetails(
-      { vanity_id: vanityKey, session_id: accessToken },
-      formatedProjects.records,
-      done => {
-        if (done) {
-          this.eventBus.emit("orgSynched", vanityKey);
-          res.render("data-sync", { appUrl });
-          return;
-        } else {
-          res.render("data-sync", { appUrl });
-          return;
-          // reject('sync failed');
-
-          // res.render('data-sync', { appUrl });
-          //     res.render('data-sync', { appUrl }, (err, html) => {
-          //     console.log(err, html);
-          //     this.eventBus.emit('sendEvent', { event: 'initialSyncDone', data: { error: 'There was a problem synching your data.' } });
-          //     return;
-          // });
-        }
-      }
-    );
-  }
-  private async getData<T>(
-    url: string,
-    accessToken: string,
-    records?: T[],
-    baseUrl?: string
-  ): Promise<ISFResponse<T>> {
-    const requestHeader = {
-      headers: {
-        Authorization: "Bearer " + accessToken,
-        "Content-Type": "application/json"
-      }
-    };
     try {
-      let partialData = new SFResponse<T>();
-      const response = await rp.get(url, requestHeader);
-      if (response.statusCode === 401) {
-        throw response;
-      } else {
-        if (response && response.length > 0) {
-          if (typeof response === "string") {
-            partialData = JSON.parse(response) as ISFResponse<T>;
+      const projects = await this.projectSfModel.getAllProjectsAndTasks(
+        accessToken,
+        vanityKey,
+      );
+      const formatedProjects = formatProjectAndTaskDetails(
+        projects.records
+      );
+      this.syncDataModel.syncSalesforceUserDetails(
+        { vanity_id: vanityKey, session_id: accessToken },
+        formatedProjects,
+        (done) => {
+          if (done) {
+            this.eventBus.emit("orgSynched", vanityKey);
+            res.render("data-sync", { appUrl });
+            return;
           } else {
-            partialData = JSON.parse(response);
+            res.render("data-sync", { appUrl });
+            return;
+            // reject('sync failed');
+
+            // res.render('data-sync', { appUrl });
+            //     res.render('data-sync', { appUrl }, (err, html) => {
+            //     console.log(err, html);
+            //     this.eventBus.emit('sendEvent', { event: 'initialSyncDone', data: { error: 'There was a problem synching your data.' } });
+            //     return;
+            // });
           }
-          if (records && records.length > 0) {
-            partialData.records.push(...records);
-          }
-          // Call the same function recursively to fetch whole data.
-          if (!partialData.done) {
-            url = baseUrl + partialData.nextRecordsUrl!;
-            return await this.getData(
-              url,
-              accessToken,
-              partialData.records,
-              baseUrl
-            );
-          } else {
-            return partialData;
-          }
-        } else {
-          return new SFResponse();
-        }
-      }
-    } catch (error) {
-      throw error;
+        });
+    } catch (err) {
+      res.render("data-sync", { appUrl, err });
+      return;
     }
   }
+
   /**
    * syncInitial
    */
@@ -343,5 +270,5 @@ export class SyncController {
     request: express.Request,
     response: express.Response,
     next: express.NextFunction
-  ) {}
+  ) { }
 }

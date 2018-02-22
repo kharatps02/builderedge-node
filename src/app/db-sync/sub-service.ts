@@ -68,7 +68,7 @@ export class SubService {
         let isProjectRequest = true;
         let records: any[] = [];
         let data = payload.Data__c;
-        const orgId = payload.OrgId__c
+        const orgId = payload.OrgId__c;
         const internalOrg = await this.orgMasterModel.getOrgConfigByOrgIdAsync(payload.OrgId__c);
 
         if (typeof payload.Data__c === 'string') {
@@ -126,7 +126,7 @@ export class SubService {
                             if (results.rows && results.rows.length > 0) {
                                 const pubservice = new PubService();
                                 results.rows.forEach((r: any) => {
-                                    const id = r['Id']
+                                    const id = r['Id'];
                                     r['Id'] = r.External_Id__c;
                                     r['External_Id__c'] = id;
                                 });
