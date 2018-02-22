@@ -235,13 +235,17 @@ export class SyncController {
         config.api_base_url + Constants.SYNC_QUERIES.ALL;
       sfResponsePerRequest = await this.getData<IProjectDetails>(
         url,
-        accessToken
+        accessToken,
+        undefined,
+        config.api_base_url
       );
       for (const element of sfResponsePerRequest.records) {
-        element.Project_Task__c = await this.getData(
-          element.Project_Task__c.nextRecordsUrl!,
+        // TODO: Fix:  StatusCodeError: 400 - "[{\"message\":\"invalid query locator\",\"errorCode\":\"INVALID_QUERY_LOCATOR\"}]"
+        element.Project_Tasks__r = await this.getData(
+          config.api_base_url + element.Project_Tasks__r.nextRecordsUrl!,
           accessToken,
-          element.Project_Task__c.records
+          element.Project_Tasks__r.records,
+          config.api_base_url
         );
       }
       return sfResponsePerRequest;
@@ -288,7 +292,8 @@ export class SyncController {
   private async getData<T>(
     url: string,
     accessToken: string,
-    records?: T[]
+    records?: T[],
+    baseUrl?: string
   ): Promise<ISFResponse<T>> {
     const requestHeader = {
       headers: {
@@ -300,20 +305,26 @@ export class SyncController {
       let partialData = new SFResponse<T>();
       const response = await rp.get(url, requestHeader);
       if (response.statusCode === 401) {
-        throw response.body;
+        throw response;
       } else {
-        if (response.body && response.body.length > 0) {
-          if (typeof response.body === "string") {
-            partialData = JSON.parse(response.body) as ISFResponse<T>;
+        if (response && response.length > 0) {
+          if (typeof response === "string") {
+            partialData = JSON.parse(response) as ISFResponse<T>;
           } else {
-            partialData = JSON.parse(response.body);
+            partialData = JSON.parse(response);
           }
           if (records && records.length > 0) {
             partialData.records.push(...records);
           }
           // Call the same function recursively to fetch whole data.
           if (!partialData.done) {
-            return await this.getData(url, accessToken, partialData.records);
+            url = baseUrl + partialData.nextRecordsUrl!;
+            return await this.getData(
+              url,
+              accessToken,
+              partialData.records,
+              baseUrl
+            );
           } else {
             return partialData;
           }

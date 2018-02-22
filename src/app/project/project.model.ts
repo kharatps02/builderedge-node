@@ -103,7 +103,7 @@ export interface IProjectDetails {
     CreatedDate?: Date;
     LastModifiedDate?: Date;
     OrgMaster_Ref_Id?: string;
-    Project_Task__c: SFResponse<ITaskDetails>;
+    Project_Tasks__r: SFResponse<ITaskDetails>;
     // for Gannt
     records?: ITaskDetails[];
 }
