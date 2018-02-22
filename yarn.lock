@@ -74,12 +74,27 @@
   dependencies:
     "@types/node" "*"
 
+"@types/glob@*":
+  version "5.0.35"
+  resolved "https://registry.yarnpkg.com/@types/glob/-/glob-5.0.35.tgz#1ae151c802cece940443b5ac246925c85189f32a"
+  dependencies:
+    "@types/events" "*"
+    "@types/minimatch" "*"
+    "@types/node" "*"
+
 "@types/ioredis@^3.2.5":
   version "3.2.5"
   resolved "https://registry.yarnpkg.com/@types/ioredis/-/ioredis-3.2.5.tgz#81889bed41ccaf175a46fb788ab7eee688bab1c6"
   dependencies:
     "@types/bluebird" "*"
     "@types/node" "*"
+
+"@types/jsforce@^1.8.7":
+  version "1.8.7"
+  resolved "https://registry.yarnpkg.com/@types/jsforce/-/jsforce-1.8.7.tgz#2c90825afce67ef686ea4bdfd84d4b1c65e3d30d"
+  dependencies:
+    "@types/express" "*"
+    "@types/glob" "*"
 
 "@types/method-override@0.0.31":
   version "0.0.31"
@@ -90,6 +105,10 @@
 "@types/mime@*":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
+
+"@types/minimatch@*":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.3.tgz#3dca0e3f33b200fc7d1139c0cd96c1268cadfd9d"
 
 "@types/morgan@^1.7.35":
   version "1.7.35"
@@ -3607,9 +3626,9 @@ type-is@~1.6.10, type-is@~1.6.15:
     media-typer "0.3.0"
     mime-types "~2.1.15"
 
-typescript@^2.6.1:
-  version "2.7.1"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.7.1.tgz#bb3682c2c791ac90e7c6210b26478a8da085c359"
+typescript@^2.7.2:
+  version "2.7.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.7.2.tgz#2d615a1ef4aee4f574425cdff7026edf81919836"
 
 uglify-js@^2.6.1:
   version "2.8.29"

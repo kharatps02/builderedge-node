@@ -74,8 +74,8 @@ export class RegisterOrgController {
             if (error) {
                 return next(error);
             }
-            const encryptedRefreshToken = utils.encryptCipher(conn.refreshToken, process.env.TOKEN_ENCRIPTION_KEY);
-            const encryptedORGID = utils.encryptCipher(userInfo.organizationId, process.env.ORGID_ENCRIPTION_KEY);
+            const encryptedRefreshToken = utils.encryptCipher(conn.refreshToken, process.env.TOKEN_ENCRIPTION_KEY!);
+            const encryptedORGID = utils.encryptCipher(userInfo.organizationId, process.env.ORGID_ENCRIPTION_KEY!);
             const grantedUserId = userInfo.id;
             const issuedAt = new Date().getTime();
             const instanceUrl = conn.instanceUrl;

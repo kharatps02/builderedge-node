@@ -22,7 +22,19 @@ export class ProjectController {
         this.projectSfModel = new ProjectSfModel();
 
     }
+    public async getAllDetailsFromDb(req: express.Request, res: express.Response, next: express.NextFunction) {
+        try {
+            const sessionId = req.headers.sessionId;
+            const orgId = req.headers.orgId;
+            // TODO: Get authorized project ids first.
 
+            // then pass it to this:
+            const data = await this.projectModel.getAllProjectsAsync();
+            res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: data });
+        } catch (err) {
+            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err });
+        }
+    }
     //#region POC1
     public async getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {

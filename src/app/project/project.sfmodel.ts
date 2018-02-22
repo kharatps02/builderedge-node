@@ -13,6 +13,12 @@ export class ProjectSfModel {
         this.sfQueryService = new SFQueryService();
     }
     /**
+     * getAuthorizedProjectIds
+     */
+    public async getAuthorizedProjectIds() {
+
+    }
+    /**
      * getAllProjectsAndTasks
      */
     public async getAllProjectsAndTasks(
@@ -30,6 +36,8 @@ export class ProjectSfModel {
                 config = await this.orgMasterModel.getOrgConfigByOrgIdAsync(
                     orgId
                 );
+            } else {
+                throw Error('Please provide vanity id or org id');
             }
             let sfResponsePerRequest: ISFResponse<IProjectDetails> = new SFResponse<
                 IProjectDetails

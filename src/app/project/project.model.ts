@@ -73,6 +73,25 @@ export class ProjectModel {
             callback(results.rows[0].Id);
         });
     }
+    /**
+     * getProjectExternalIdMap
+     */
+    public async getAllProjectsAsync(projectIds?: string[]): Promise<IProjectDetails[]> {
+        try {
+            const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+            pgClient.connect();
+            let result: QueryResult;
+            if (projectIds && projectIds.length > 0) {
+                result = await pgClient.query('select * from public.get_all_project_tasks_json($1)', [projectIds]);
+            } else {
+                result = await pgClient.query('select * from public.get_all_project_tasks_json()');
+            }
+            pgClient.end();
+            return result.rows[0].get_all_project_tasks_json.projects;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export interface IProjectRequest {
