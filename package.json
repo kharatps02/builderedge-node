@@ -6,12 +6,14 @@
   "author": "",
   "scripts": {
     "grunt": "grunt",
-    "start": "node ./bin/www"
+    "start": "node ./bin/www",
+    "build": "tsc -p ./tsconfig.json"
   },
   "dependencies": {
     "@toverux/expresse": "^2.4.0",
     "@types/async": "^2.0.47",
     "@types/body-parser": "1.16.8",
+    "@types/cookie-parser": "^1.4.1",
     "@types/errorhandler": "0.0.32",
     "@types/express": "^4.11.1",
     "@types/jsforce": "^1.8.7",
@@ -31,6 +33,7 @@
     "grunt": "^1.0.1",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
+    "grunt-exec": "^3.0.0",
     "grunt-ts": "^6.0.0-beta.17",
     "jsforce": "^1.8.0",
     "morgan": "^1.9.0",

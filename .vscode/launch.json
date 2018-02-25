@@ -11,7 +11,7 @@
             "runtimeExecutable": "nodemon",
             "preLaunchTask": "grunt",
             "program": "${workspaceFolder}/bin/www",
-            "restart": true,
+            "restart": false,
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
         },

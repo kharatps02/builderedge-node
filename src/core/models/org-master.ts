@@ -21,13 +21,13 @@ export class OrgMaster implements IOrgMaster {
             this.org_id = org.org_id;
         }
     }
-    public vanity_id: string;
-    public api_base_url: string;
-    public access_token: string;
+    public vanity_id!: string;
+    public api_base_url!: string;
+    public access_token!: string;
     public user_id?: string;
-    public refresh_token: string;
-    public event_endpoint_url: string;
-    public org_id: string;
+    public refresh_token!: string;
+    public event_endpoint_url!: string;
+    public org_id!: string;
 
     /**
      * getRefreshToken

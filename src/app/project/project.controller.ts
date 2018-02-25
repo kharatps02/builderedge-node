@@ -20,83 +20,48 @@ export class ProjectController {
         this.projectModel = new ProjectModel();
         this.orgMasterModel = new OrgMasterModel();
         this.projectSfModel = new ProjectSfModel();
-
     }
-    public async getAllDetailsFromDb(req: express.Request, res: express.Response, next: express.NextFunction) {
+    /**
+     * @description
+     * Get Projects and tasks to be used with the Gantt.
+     * Gets projects for the given project ids if user is authorized to access them.
+     * If no project ids are passed, it gets all projects the user is authorized to access.
+     * @param req 
+     * @param res 
+     * @param next
+     * @author Rushikesh K
+     */
+    public async getProjectsForGantt(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            const sessionId = req.headers.sessionId;
-            const orgId = req.headers.orgId;
-            // TODO: Get authorized project ids first.
-
-            // then pass it to this:
-            const data = await this.projectModel.getAllProjectsAsync();
+            const sessionId = req.headers['session-id'] as string;
+            const orgId = req.headers['org-id'] as string;
+            const receivedProjectIds: string[] = req.query.p || req.body;
+            if (!sessionId || !orgId) {
+                throw Error("Unauthorized request");
+            }
+            // Get org config based on the passed org id.
+            const orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
+            // Get authorized project ids first.
+            let authorizedProjectIds: string[] = await this.projectSfModel.getAuthorizedProjectIds(receivedProjectIds, orgConfig.api_base_url, sessionId);
+            // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
+            const data = await this.projectModel.getAllProjectsAsync(authorizedProjectIds);
             res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: data });
         } catch (err) {
-            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err });
+            res.status(500).send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err });
         }
     }
     //#region POC1
-    public async getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
-        try {
-            const sessionId = req.headers.session_id || req.body.session_id;
-            const orgId = req.headers.org_id || req.body.org_id;
-            const data = await this.projectSfModel.getAllProjectsAndTasks(sessionId, undefined, orgId);
-            const formatedProjects = formatProjectAndTaskDetails(
-                data.records
-            );
-            res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
-        } catch (err) {
-            res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err });
-        }
-    }
-    // public getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
+    // public async getAllDetails(req: express.Request, res: express.Response, next: express.NextFunction) {
     //     try {
     //         const sessionId = req.headers.session_id || req.body.session_id;
     //         const orgId = req.headers.org_id || req.body.org_id;
-    //         if (sessionId && orgId) {
-    //             // Get project details from salesforce api
-    //             const requestHeader = {
-    //                 headers: {
-    //                     'Authorization': 'Bearer ' + sessionId,
-    //                     'Content-Type': 'application/json',
-    //                 },
-    //             };
-    //             this.orgMasterModel.getOrgConfigByOrgId(orgId, (error, config?: IOrgMaster) => {
-    //                 if (!error && config) {
-    //                     request(config.api_base_url + '/services/apexrest/ProductService', requestHeader, (error1, response) => {
-    //                         if (!error1) {
-    //                             if (response.statusCode === 401) {
-    //                                 res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: response.body[0].message });
-    //                             } else {
-    //                                 if (response.body && response.body.length > 0) {
-    //                                     let projectArray: IProjectDetails[] = response.body;
-    //                                     if (typeof response.body === 'string') {
-    //                                         projectArray = JSON.parse(response.body);
-    //                                     }
-    //                                     const formatedProjects = formatProjectAndTaskDetails(projectArray);
-    //                                     formatedProjects.map((self) => {
-    //                                         self['OrgMaster_Ref_Id'] = config.vanity_id;
-    //                                     });
-    //                                     // DO NOT INSERT/UPDATE since it's taken care by the SPE and registration process.
-    //                                     // this.syncSalesforceUserDetails(
-    //                                     //     { org_id: req.body.session_id, session_id: req.body.session_id }, formatedProjects);
-    //                                     res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
-    //                                 }
-    //                             }
-    //                         } else {
-    //                             res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error1 });
-    //                         }
-    //                     });
-    //                 } else {
-    //                     res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: error });
-    //                 }
-    //             });
-    //         } else {
-    //             res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.INVALID_REQUEST_PARAMS });
-    //         }
-    //     } catch (e) {
-    //         console.log(e);
-    //         res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
+    //         const data = await this.projectSfModel.getAllProjectsAndTasks(sessionId, undefined, orgId);
+    //         const formatedProjects = formatProjectAndTaskDetails(
+    //             data.records
+    //         );
+    //         res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: formatedProjects });
+    //     } catch (err) {
+    //         res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err });
     //     }
     // }
 
@@ -161,24 +126,6 @@ export class ProjectController {
             res.send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
     }
-
-    // public updateProjectsOrTasksOnSalesforce(params: { org_id: string, session_id: string }, data: { ProjectTasks: IProjectDetails[], Projects: IProjectDetails[] }) {
-    //     const requestData = { ProjectTasks: [], Projects: [] };
-    //     // if (data.Projects && data.Projects.length > 0) {
-    //     //     data.Projects.forEach((row) => {
-    //     //         requestData.Projects.push(formatSalesForceObject(row));
-    //     //     });
-    //     // }
-    //     // if (data.ProjectTasks && data.ProjectTasks.length > 0) {
-    //     //     data.ProjectTasks.forEach((row) => {
-    //     //         requestData.ProjectTasks.push(formatSalesForceObject(row));
-    //     //     });
-    //     // }
-
-    //     if (params.session_id) {
-    //         this.postRequestOnSalesforce(params, { Data__c: JSON.stringify(requestData) });
-    //     }
-    // }
 
     /**
      * @description Sent post request on salesforce endpoints

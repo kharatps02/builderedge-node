@@ -8,7 +8,7 @@ import { buildUpdateStatements } from './project.helper';
 // import *  as pg from 'pg';
 
 export class ProjectModel {
-    private pgClient: Client;
+    private pgClient!: Client;
     constructor() {
 
     }
@@ -82,12 +82,12 @@ export class ProjectModel {
             pgClient.connect();
             let result: QueryResult;
             if (projectIds && projectIds.length > 0) {
-                result = await pgClient.query('select * from public.get_all_project_tasks_json($1)', [projectIds]);
+                result = await pgClient.query('select * from public.get_project_tasks_json($1)', [projectIds]);
             } else {
-                result = await pgClient.query('select * from public.get_all_project_tasks_json()');
+                result = await pgClient.query('select * from public.get_project_tasks_json()');
             }
             pgClient.end();
-            return result.rows[0].get_all_project_tasks_json.projects;
+            return result.rows[0].get_project_tasks_json.projects;
         } catch (error) {
             throw error;
         }

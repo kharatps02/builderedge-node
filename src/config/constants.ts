@@ -9,6 +9,13 @@ export namespace Constants {
         connectionString: process.env.DATABASE_URL || 'postgres://mzjseajwunmjbi:2add0b650f12012c219677ce95c13b36379f3d0df8f9f569cd15ba5623423f50@ec2-54-83-204-230.compute-1.amazonaws.com:5432/dei96aqio25l8r',
         ssl: true,
     };
+    export namespace ENCRYPTION {
+        export const TOKEN_ENCRYPTION_KEY = process.env.TOKEN_ENCRYPTION_KEY || '';
+        export const ORG_ID_ENCRYPTION_KEY = process.env.ORG_ID_ENCRYPTION_KEY || '';
+    }
+    export namespace SF_REST {
+        export const GET_AUTHORIZED_PROJECT_IDS = '/services/apexrest/UserProjectPermission';
+    }
     export const SYNC_QUERIES = {
         // tslint:disable-next-line:max-line-length
         ALL: '/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Start_Date__c,Status__c,SystemModstamp,(SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Project__c,Start_Date__c,Status__c,SystemModstamp+FROM+Project_Tasks__r)+FROM+Project__c',

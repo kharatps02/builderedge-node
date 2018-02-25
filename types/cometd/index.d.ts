@@ -36,7 +36,7 @@ declare module 'cometd' {
 
         handshake(handshake_params: any): void;
 
-        publish(channel: string, message: any, callback?: (publishAck) => void): void;
+        publish(channel: string, message: any, callback?: (publishAck: any) => void): void;
 
 
         disconnect(): void;
