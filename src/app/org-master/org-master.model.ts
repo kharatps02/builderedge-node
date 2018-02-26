@@ -77,7 +77,6 @@ export class OrgMasterModel {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like ORG_ID || '%'";
-        const orgConfigMap = new Map<string, any>();
         const result = await pgClient.query(queryString, [encryptedOrgId]);
         if (result && result.rows.length > 0) {
             return result.rows[0];

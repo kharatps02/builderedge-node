@@ -25,8 +25,8 @@ export class RegisterOrgDataModel {
     public async registerOrg(orgId: string, refreshToken: string, instanceUrl: string, grantedUserId: string, accessToken: string): Promise<IOrgMaster> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         try {
-            const encryptedRefreshToken = utils.encryptCipher(orgId, Constants.ENCRYPTION.TOKEN_ENCRYPTION_KEY);
-            const encryptedOrgId = utils.encryptCipher(refreshToken, Constants.ENCRYPTION.ORG_ID_ENCRYPTION_KEY);
+            const encryptedRefreshToken = utils.encryptCipher(refreshToken, Constants.ENCRYPTION.TOKEN_ENCRYPTION_KEY);
+            const encryptedOrgId = utils.encryptCipher(orgId, Constants.ENCRYPTION.ORG_ID_ENCRYPTION_KEY);
 
             pgClient.connect();
             // Check if the org record already exists.
