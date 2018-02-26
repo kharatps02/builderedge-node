@@ -37,7 +37,7 @@ export class ProjectController {
             const orgId = req.headers['org-id'] as string;
             const receivedProjectIds: string[] = req.query.p || req.body;
             if (!sessionId || !orgId) {
-                throw Error("Unauthorized request");
+                throw "Unauthorized request";
             }
             // Get org config based on the passed org id.
             const orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
@@ -47,7 +47,8 @@ export class ProjectController {
             const data = await this.projectModel.getAllProjectsAsync(authorizedProjectIds);
             res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: data });
         } catch (err) {
-            res.status(500).send({ status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err });
+            const err1 = { status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err };
+            res.status(500).send(err1);
         }
     }
     //#region POC1
