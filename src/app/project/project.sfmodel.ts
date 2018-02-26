@@ -24,7 +24,7 @@ export class ProjectSfModel {
      */
     public async getAuthorizedProjectIds(receviedProjectIds: string[] | string, baseUrl: string, accessToken?: string, refreshToken?: string): Promise<string[]> {
         if (!(accessToken || refreshToken)) {
-            throw Error('User could not be authentication. Please pass authentication information.')
+            throw 'User could not be authentication. Please pass authentication information.';
         }
         const conn = new jsforce.Connection({
             oauth2: {

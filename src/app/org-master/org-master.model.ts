@@ -82,12 +82,12 @@ export class OrgMasterModel {
         if (result && result.rows.length > 0) {
             return result.rows[0];
         } else {
-            throw Error("No record found");
+            throw { code: 0, message: "Org not registered" };
         }
     }
     public async updateAccessToken(orgId: number | string, accessToken: string): Promise<boolean> {
         const encryptedOrgId = utils.encryptCipher(orgId, Constants.ENCRYPTION.ORG_ID_ENCRYPTION_KEY);
-        
+
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         const queryString = "UPDATE org_master SET access_token = $1 WHERE $2 LIKE org_id || '%'";

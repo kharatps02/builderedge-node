@@ -87,7 +87,10 @@ export class ProjectModel {
                 result = await pgClient.query('select * from public.get_project_tasks_json()');
             }
             pgClient.end();
-            return result.rows[0].get_project_tasks_json.projects;
+            if (result.rows && result.rows.length > 0) {
+                return result.rows[0].get_project_tasks_json.projects;
+            }
+            return [];
         } catch (error) {
             throw error;
         }
