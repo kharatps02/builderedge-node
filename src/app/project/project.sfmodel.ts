@@ -88,12 +88,13 @@ export class ProjectSfModel {
                 config.api_base_url
             );
             const loaded = (p: ISFResponse<IProjectDetails>) => {
-                return p.done && p.records && p.records.map(m => m.Project_Tasks__r.done).reduce((b) => b);
+                const val = p.done && p.records && p.records.map(m => m.Project_Tasks__r && m.Project_Tasks__r.done).reduce((b) => b);
+                return val === null ? true : val;
             };
             do {
                 for (const element of sfResponsePerRequest.records) {
                     // TODO: Fix:  StatusCodeError: 400 - "[{\"message\":\"invalid query locator\",\"errorCode\":\"INVALID_QUERY_LOCATOR\"}]"
-                    while (!element.Project_Tasks__r.done) {
+                    while (element.Project_Tasks__r && !element.Project_Tasks__r.done) {
                         element.Project_Tasks__r = await this.sfQueryService.getDataAppendRest(
                             config.api_base_url + element.Project_Tasks__r.nextRecordsUrl!,
                             accessToken,

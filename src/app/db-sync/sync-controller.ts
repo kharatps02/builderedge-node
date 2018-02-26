@@ -28,10 +28,15 @@ export class SyncController {
     this.orgMasterModel = new OrgMasterModel();
     this.syncDataModel = new SyncDataModel();
     this.projectSfModel = new ProjectSfModel();
-    this.eventBus.addListener("orgSynched", (vanityId: string) => {
-      console.log("Subscribing to the new org", vanityId);
-      this.addNewOrgToSubscribers(vanityId);
+    this.eventBus.addListener("orgSynched", (data: any) => {
+      console.log("Subscribing to the new org", data);
+      this.addNewOrgToSubscribers(data);
     });
+    this.eventBus.addListener("error", (data: any) => {
+      console.log("Subscribing to error");
+      this.addNewOrgToSubscribers(data);
+    });
+
   }
   /**
    * events
@@ -41,6 +46,7 @@ export class SyncController {
     res: ISseResponse,
     next: express.NextFunction
   ) {
+    res.sse.event('hello', 'hello');
     this.eventBus.addListener(
       "sendEvent",
       (args: { event: string; data: any }) => {
@@ -97,15 +103,17 @@ export class SyncController {
       const formatedProjects = formatProjectAndTaskDetails(
         projects.records
       );
+
       this.syncDataModel.syncSalesforceUserDetails(
         { vanity_id: vanityKey, session_id: accessToken },
         formatedProjects,
         (done) => {
           if (done) {
-            this.eventBus.emit("orgSynched", vanityKey);
+            this.eventBus.emit("orgSynched", { appUrl, vanityKey });
             res.render("data-sync", { appUrl });
             return;
           } else {
+            this.eventBus.emit("error", formatedProjects);
             res.render("data-sync", { appUrl });
             return;
             // reject('sync failed');
@@ -118,8 +126,9 @@ export class SyncController {
             // });
           }
         });
+      // res.render("data-sync", { appUrl });
     } catch (err) {
-      res.render("data-sync", { appUrl, err });
+      res.render("error", { appUrl, err });
       return;
     }
   }

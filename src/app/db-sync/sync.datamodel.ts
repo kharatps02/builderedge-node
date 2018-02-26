@@ -18,7 +18,7 @@ export class SyncDataModel {
      * @param params
      * @param salesforceResponseArray
      */
-    public syncSalesforceUserDetails(params: { vanity_id: string, session_id: string }, salesforceResponseArray: any[], callback: (done: boolean) => void) {
+    public syncSalesforceUserDetails(params: { vanity_id: string, session_id: string }, salesforceResponseArray: any[], callback: (done: boolean, error?: any) => void) {
         const that = this;
         try {
             const projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
@@ -58,6 +58,12 @@ export class SyncDataModel {
                         });
 
                         if (taskRecords && taskRecords.length) {
+                            // let rec1: ITaskDetails[];
+                            // if (taskRecords.length > 34464 * 12) {
+
+                            // }
+
+                            // taskRecords.slice(34464 / 12)
                             const tasksQueryConfig = buildInsertStatements(taskRecords, ['"Id"', '"External_Id__c"'], false);
                             that.projectModel.insertManyStatements(tasksQueryConfig, (error1, taskResult) => {
                                 if (!error1) {
@@ -83,6 +89,8 @@ export class SyncDataModel {
                                     }
                                 }
                             });
+
+
                         } else {
                             // call salesforce endpoints to update postgres id into salesforce databse
                             if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0) {
@@ -97,7 +105,7 @@ export class SyncDataModel {
                         }
                     } else {
                         console.log('In execMultipleStatment error>>', error);
-                        callback(false);
+                        callback(false, error);
                     }
                 });
             } else {
@@ -106,7 +114,7 @@ export class SyncDataModel {
             }
         } catch (e) {
             console.log(e);
-            callback(false);
+            callback(false, e);
         }
 
     }
