@@ -36,15 +36,15 @@ export class ProjectSfModel {
             accessToken,
             instanceUrl: baseUrl
         });
-        if (receviedProjectIds && (Array.isArray(receviedProjectIds) || typeof receviedProjectIds == 'string')) {
+        if (receviedProjectIds && (Array.isArray(receviedProjectIds) || typeof receviedProjectIds === 'string')) {
             if (Array.isArray(receviedProjectIds)) {
                 const q = receviedProjectIds.join(',');
                 const options = { qs: { id: q } };
-                return await conn.requestGet<string[]>(Constants.SF_REST.GET_AUTHORIZED_PROJECT_IDS, options);
+                return await conn.requestGet<string[]>(`${Constants.SF_REST.GET_AUTHORIZED_PROJECT_IDS}?id=${q}`);
             } else {
                 const q = receviedProjectIds;
                 const options = { qs: { id: q } };
-                return await conn.requestGet<string[]>(Constants.SF_REST.GET_AUTHORIZED_PROJECT_IDS, options);
+                return await conn.requestGet<string[]>(`${Constants.SF_REST.GET_AUTHORIZED_PROJECT_IDS}?id=${q}`);
             }
         } else {
             return await conn.requestGet<string[]>(Constants.SF_REST.GET_AUTHORIZED_PROJECT_IDS);
