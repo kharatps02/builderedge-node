@@ -26,15 +26,15 @@ export class ProjectController {
      * Get Projects and tasks to be used with the Gantt.
      * Gets projects for the given project ids if user is authorized to access them.
      * If no project ids are passed, it gets all projects the user is authorized to access.
-     * @param req 
-     * @param res 
+     * @param req
+     * @param res
      * @param next
      * @author Rushikesh K
      */
     public async getProjectsForGantt(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            const sessionId = req.headers['session-id'] as string;
-            const orgId = req.headers['org-id'] as string;
+            const sessionId = req.headers['sessionid'] as string;
+            const orgId = req.headers['orgid'] as string;
             const receivedProjectIds: string[] = req.query.p || req.body;
             if (!sessionId || !orgId) {
                 throw Error("Unauthorized request");
@@ -42,7 +42,7 @@ export class ProjectController {
             // Get org config based on the passed org id.
             const orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
             // Get authorized project ids first.
-            let authorizedProjectIds: string[] = await this.projectSfModel.getAuthorizedProjectIds(receivedProjectIds, orgConfig.api_base_url, sessionId);
+            const authorizedProjectIds: string[] = await this.projectSfModel.getAuthorizedProjectIds(receivedProjectIds, orgConfig.api_base_url, sessionId);
             // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
             const data = await this.projectModel.getAllProjectsAsync(authorizedProjectIds);
             res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: data });

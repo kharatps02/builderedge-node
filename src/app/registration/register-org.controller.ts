@@ -22,7 +22,7 @@ export class RegisterOrgController {
     public register(request: express.Request, response: express.Response) {
         let isSandBoxUser = request.params.isSandBoxUser;
         const origin = request.query.origin;
-        if(origin) {
+        if (origin) {
             response.cookie("experience", origin);
         }
         if (isSandBoxUser !== "true") {
@@ -76,7 +76,7 @@ export class RegisterOrgController {
             try {
                 const result = await this.dataModel.registerOrg(userInfo.organizationId, conn.refreshToken,
                     instanceUrl, grantedUserId, conn.accessToken);
-                response.cookie('access-token', result.access_token)
+                response.cookie('access-token', result.access_token);
                 response.redirect('/registeredSuccessfully/' + result.vanity_id);
 
             } catch (error) {
