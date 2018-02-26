@@ -69,7 +69,7 @@ export class Server {
     this.app.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-      res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization');
+      res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type, Authorization, session-id, org-id');
       next();
     });
     // mount logger
