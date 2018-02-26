@@ -33,8 +33,8 @@ export class ProjectController {
      */
     public async getProjectsForGantt(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            const sessionId = req.headers['sessionid'] as string;
-            const orgId = req.headers['orgid'] as string;
+            const sessionId = req.headers['session-id'] as string;
+            const orgId = req.headers['org-id'] as string;
             const receivedProjectIds: string[] = req.query.p || req.body;
             if (!sessionId || !orgId) {
                 throw Error("Unauthorized request");
