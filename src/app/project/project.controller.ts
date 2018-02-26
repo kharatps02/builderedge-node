@@ -47,8 +47,8 @@ export class ProjectController {
             const data = await this.projectModel.getAllProjectsAsync(authorizedProjectIds);
             res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: data });
         } catch (err) {
-            const err1 = { status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG, error: err };
-            res.status(500).send(err1);
+            res.status(500).send(err);
+            // const err1 = { status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG};
         }
     }
     //#region POC1
