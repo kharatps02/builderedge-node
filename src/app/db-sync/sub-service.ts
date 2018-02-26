@@ -51,10 +51,9 @@ export class SubService {
                         const dataFromServer = m.data;
                         console.log('Response Received! :', dataFromServer);
                         if (dataFromServer && dataFromServer.payload && dataFromServer.payload.Action__c) {
+                            // Use dataFromServer here to update database.
                             this.updateDB(dataFromServer.payload);
                         }
-
-                        // Use dataFromServer here.
                     });
                 } else {
                     console.log(h);

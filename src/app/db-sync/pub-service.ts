@@ -1,38 +1,20 @@
-import { IOrgMaster } from './../../core/models/org-master';
-import { Authentication } from './../../core/authentication/authentication';
+import * as jsforce from 'jsforce';
 import { OrgMasterModel } from './../org-master/org-master.model';
-import { CometD } from "cometd";
-import * as nforce from "nforce";
 import { Constants } from "../../config/constants";
-import * as request from 'request';
-import { IOAuthToken } from '../../core/authentication/oauth-model';
+import { SFQueryService } from '../../core/sf-query.service';
 
 /**
  * @description Publish service can be used to publish data to salesforce.
  */
 export class PubService {
-    private authenticator: Authentication;
+    private sfQueryService: SFQueryService;
     private orgMasterModel: OrgMasterModel;
 
     constructor() {
         this.orgMasterModel = new OrgMasterModel();
-        this.authenticator = new Authentication();
+        this.sfQueryService = new SFQueryService();
     }
-    /**
-     * @description Gets Org config for the given org Id.
-     * @param orgId Org Id of the Org to fetch config of.
-     * @param callback Callback
-     */
-    private getUserOrgConfig(orgId: string, callback: (orgUserDetails: IOrgMaster) => void) {
-        return this.orgMasterModel.getOrgConfigByOrgId(orgId, (error1, result) => {
-            if (error1) {
-                return;
-            }
-            if (result && callback) {
-                callback(result);
-            }
-        });
-    }
+
     /**
      *
      * @description Publishes the data to the Salesforce Platform Event.
@@ -40,38 +22,30 @@ export class PubService {
      * @param data Data to be published
      * @param callback callback
      */
-    public publish(orgId: string, data: any, callback?: (error, eventResponse) => void) {
-        this.getUserOrgConfig(orgId, (userOrgDetails) => {
-
-            const org = nforce.createConnection({
-                clientId: Constants.OAUTH.client_id,
-                clientSecret: Constants.OAUTH.client_secret,
-                redirectUri: Constants.OAUTH.redirectUri,
-                // redirectUri: 'http://localhost:3000/oauth/_callback',
-                apiVersion: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.API_VERSION,  // optional, defaults to current salesforce API version
-                environment: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.ENV,  // optional, salesforce 'sandbox' or 'production', production default
-                mode: Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.MODE, // optional, 'single' or 'multi' user mode, multi default
-                grant_type: Constants.OAUTH.grant_type,
-                refresh_token: userOrgDetails.refresh_token,
-            });
-
-            this.authenticator.authenticateAndRun(userOrgDetails, (error: any, oAuthToken: IOAuthToken | undefined) => {
-                org.oauth = oAuthToken;
-                console.log(org.oauth.instance_url);
-                const event = nforce.createSObject(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME);
-                event.set('Data__c', data);
-                org.insert({ sobject: event }, (err1: any, resp: any) => {
-                    if (err1) {
-                        console.error(err1);
-                    } else {
-                        console.log(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME, " published");
-                    }
-                    if (callback) {
-                        callback(err1, resp);
-                    }
-                });
-            });
+    public async publish(orgId: string, data: any, callback?: (error: Error, eventResponse: any) => void) {
+        const conn = await this.sfQueryService.getConnectionAsIntegUser(orgId);
+        // event to check when the access token is refreshed.
+        // We can save it if we want any per user logic.
+        conn.on("refresh", (token: string, response: any) => {
+            console.log(token);
+            this.orgMasterModel.updateAccessToken(orgId, token);
         });
+        //// Manually refreshes the access token using refresh token
+        // conn.oauth2.refreshToken('5Aep8613hy0tHCYdhwfV72zcrObyt1SiQpoPS6OQCtnA8L_SxzVeSMEA6VgyW4nVKw.t6iwjPnxPRxLHAU3HEO1',
+        //     (err: any, results: any) => {
+        //         console.log(err, results);
+        //     });
 
+        const event = conn.sobject(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME);
+        const result = await event.create({ Data__c: data }, (err, ret) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME, " published");
+            }
+            if (callback) {
+                callback(err, ret);
+            }
+        });
     }
 }

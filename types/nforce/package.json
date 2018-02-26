@@ -1,0 +1,12 @@
+{
+    "name": "@types/nforce",
+    "version": "1.0",
+    "author": {
+        "email": "rushikesh.kshirsagar@extentia.com",
+        "name": "Rushikesh K"
+    },
+    "description": "TypeScript definitions for nforce",
+    "license": "MIT",
+    "scripts": {},
+    "typeScriptVersion": "2.2"
+}

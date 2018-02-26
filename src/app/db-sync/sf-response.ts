@@ -7,7 +7,7 @@ export interface ISFResponse<T> {
 }
 export class SFResponse<T> implements ISFResponse<T> {
     public done: boolean = false;
-    public totalSize: number;
-    public records: T[];
+    public totalSize!: number;
+    public records!: T[];
     public nextRecordsUrl?: string;
 }

@@ -19,6 +19,11 @@ module.exports = function (grunt) {
         ],
       },
     },
+    exec: {
+      build: {
+        cmd: 'npm run build',
+      }
+    },
     ts: {
       app: {
         files: [{
@@ -48,9 +53,11 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks("grunt-contrib-copy");
   grunt.loadNpmTasks("grunt-contrib-watch");
   grunt.loadNpmTasks("grunt-ts");
+  grunt.loadNpmTasks("grunt-exec");
 
   grunt.registerTask("default", [
     "copy",
-    "ts",
+    // "ts",
+    "exec",
   ]);
 };

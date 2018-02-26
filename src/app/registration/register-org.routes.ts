@@ -4,7 +4,6 @@ import * as express from 'express';
  * @description Project routs configuration.
  */
 export class RegisterOrgRoutes {
-    private routers: express.Router;
     private registerOrgController: RegisterOrgController;
     //  private authentication: Authentication;
     constructor() {
@@ -15,7 +14,7 @@ export class RegisterOrgRoutes {
     get routes() {
         const router = express.Router();
         // router.get('/', this.registerOrgController.index);
-        // router.get('/register', this.registerOrgController.registerIndex.bind(this.registerOrgController));
+        router.get('/register', this.registerOrgController.registerIndex.bind(this.registerOrgController));
         router.get('/register/:isSandBoxUser?', this.registerOrgController.register.bind(this.registerOrgController));
         // router.get('/registerUser/:orgid', this.registerOrgController.registerUser);
         router.get('/authorizeUser', this.registerOrgController.authorizeUser.bind(this.registerOrgController));

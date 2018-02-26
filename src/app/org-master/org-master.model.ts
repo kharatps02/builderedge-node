@@ -2,6 +2,7 @@ import { Client } from 'pg';
 import { Constants } from '../../config/constants';
 import { error } from 'util';
 import { IOrgMaster } from '../../core/models/org-master';
+import { utils } from '../../utils/utils';
 
 /**
  * @description Handles all database functions for OrgMaster table
@@ -57,11 +58,11 @@ export class OrgMasterModel {
 
     }
     public getOrgConfigByOrgId(orgId: string, callback: (error: Error, config?: IOrgMaster) => void) {
+        const encryptedOrgId = utils.encryptCipher(orgId, Constants.ENCRYPTION.ORG_ID_ENCRYPTION_KEY);
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like ORG_ID || '%'";
-        const orgConfigMap = new Map<string, any>();
-        pgClient.query(queryString, [orgId], (error1, results) => {
+        pgClient.query(queryString, [encryptedOrgId], (error1, results) => {
             pgClient.end();
             // console.log(results.rows[0]);
             if (!error1 && results && results.rows.length > 0) {
@@ -72,13 +73,28 @@ export class OrgMasterModel {
         });
     }
     public async getOrgConfigByOrgIdAsync(orgId: string): Promise<IOrgMaster> {
+        const encryptedOrgId = utils.encryptCipher(orgId, Constants.ENCRYPTION.ORG_ID_ENCRYPTION_KEY);
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         const queryString = "SELECT * FROM ORG_MASTER WHERE $1 like ORG_ID || '%'";
         const orgConfigMap = new Map<string, any>();
-        const result = await pgClient.query(queryString, [orgId]);
+        const result = await pgClient.query(queryString, [encryptedOrgId]);
         if (result && result.rows.length > 0) {
             return result.rows[0];
+        } else {
+            throw Error("No record found");
+        }
+    }
+    public async updateAccessToken(orgId: number | string, accessToken: string): Promise<boolean> {
+        const encryptedOrgId = utils.encryptCipher(orgId, Constants.ENCRYPTION.ORG_ID_ENCRYPTION_KEY);
+        
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+        pgClient.connect();
+        const queryString = "UPDATE org_master SET access_token = $1 WHERE $2 LIKE org_id || '%'";
+        const orgConfigMap = new Map<string, any>();
+        const result = await pgClient.query(queryString, [accessToken, encryptedOrgId]);
+        if (result && result.rowCount > 0) {
+            return result.rowCount > 0;
         } else {
             throw Error("No record found");
         }

@@ -8,7 +8,7 @@ import { buildUpdateStatements } from './project.helper';
 // import *  as pg from 'pg';
 
 export class ProjectModel {
-    private pgClient: Client;
+    private pgClient!: Client;
     constructor() {
 
     }
@@ -72,6 +72,25 @@ export class ProjectModel {
             pgClient.end();
             callback(results.rows[0].Id);
         });
+    }
+    /**
+     * getProjectExternalIdMap
+     */
+    public async getAllProjectsAsync(projectIds?: string[]): Promise<IProjectDetails[]> {
+        try {
+            const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
+            pgClient.connect();
+            let result: QueryResult;
+            if (projectIds && projectIds.length > 0) {
+                result = await pgClient.query('select * from public.get_project_tasks_json($1)', [projectIds]);
+            } else {
+                result = await pgClient.query('select * from public.get_project_tasks_json()');
+            }
+            pgClient.end();
+            return result.rows[0].get_project_tasks_json.projects;
+        } catch (error) {
+            throw error;
+        }
     }
 }
 

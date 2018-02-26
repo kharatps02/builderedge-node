@@ -39,6 +39,12 @@
   version "0.12.1"
   resolved "https://registry.yarnpkg.com/@types/caseless/-/caseless-0.12.1.tgz#9794c69c8385d0192acc471a540d1f8e0d16218a"
 
+"@types/cookie-parser@^1.4.1":
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/@types/cookie-parser/-/cookie-parser-1.4.1.tgz#e88a39c41960f31549b4c52dd8620aa4a2feb4bb"
+  dependencies:
+    "@types/express" "*"
+
 "@types/debug@0.0.29":
   version "0.0.29"
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-0.0.29.tgz#a1e514adfbd92f03a224ba54d693111dbf1f3754"
@@ -74,12 +80,27 @@
   dependencies:
     "@types/node" "*"
 
+"@types/glob@*":
+  version "5.0.35"
+  resolved "https://registry.yarnpkg.com/@types/glob/-/glob-5.0.35.tgz#1ae151c802cece940443b5ac246925c85189f32a"
+  dependencies:
+    "@types/events" "*"
+    "@types/minimatch" "*"
+    "@types/node" "*"
+
 "@types/ioredis@^3.2.5":
   version "3.2.5"
   resolved "https://registry.yarnpkg.com/@types/ioredis/-/ioredis-3.2.5.tgz#81889bed41ccaf175a46fb788ab7eee688bab1c6"
   dependencies:
     "@types/bluebird" "*"
     "@types/node" "*"
+
+"@types/jsforce@^1.8.7":
+  version "1.8.7"
+  resolved "https://registry.yarnpkg.com/@types/jsforce/-/jsforce-1.8.7.tgz#2c90825afce67ef686ea4bdfd84d4b1c65e3d30d"
+  dependencies:
+    "@types/express" "*"
+    "@types/glob" "*"
 
 "@types/method-override@0.0.31":
   version "0.0.31"
@@ -90,6 +111,10 @@
 "@types/mime@*":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.0.tgz#5a7306e367c539b9f6543499de8dd519fac37a8b"
+
+"@types/minimatch@*":
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.3.tgz#3dca0e3f33b200fc7d1139c0cd96c1268cadfd9d"
 
 "@types/morgan@^1.7.35":
   version "1.7.35"
@@ -393,10 +418,6 @@ block-stream@*:
   resolved "https://registry.yarnpkg.com/block-stream/-/block-stream-0.0.9.tgz#13ebfe778a03205cfe03751481ebb4b3300c126a"
   dependencies:
     inherits "~2.0.0"
-
-bluebird@^2.3.11:
-  version "2.11.0"
-  resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-2.11.0.tgz#534b9033c022c9579c56ba3b3e5a5caafbb650e1"
 
 bluebird@^3.3.4, bluebird@^3.5.0:
   version "3.5.1"
@@ -1178,16 +1199,6 @@ faye-websocket@~0.10.0:
   dependencies:
     websocket-driver ">=0.5.1"
 
-faye@1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/faye/-/faye-1.2.3.tgz#cea21234c70392026831fe0140044e8c4e492606"
-  dependencies:
-    asap "*"
-    csprng "*"
-    faye-websocket ">=0.9.1"
-    tough-cookie "*"
-    tunnel-agent "*"
-
 faye@^1.2.0, faye@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/faye/-/faye-1.2.4.tgz#978ed8a58f1d481e5c1f98bacb8959de5ec5c643"
@@ -1489,6 +1500,10 @@ grunt-contrib-watch@^1.0.0:
     gaze "^1.0.0"
     lodash "^3.10.1"
     tiny-lr "^0.2.1"
+
+grunt-exec@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/grunt-exec/-/grunt-exec-3.0.0.tgz#881f868d64098788fddaf22fa25d8572a9d64dc7"
 
 grunt-known-options@~1.1.0:
   version "1.1.0"
@@ -2430,16 +2445,6 @@ ncp@0.5.1:
 negotiator@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/negotiator/-/negotiator-0.6.1.tgz#2b327184e8992101177b28563fb5e7102acd0ca9"
-
-nforce@^1.10.0:
-  version "1.10.0"
-  resolved "https://registry.yarnpkg.com/nforce/-/nforce-1.10.0.tgz#8a08215e3b2a40b1b5d74b0504b50bbbef520baf"
-  dependencies:
-    bluebird "^2.3.11"
-    faye "1.2.3"
-    lodash "^3.10.1"
-    mime "1.4.1"
-    request "2.81.0"
 
 node-pre-gyp@^0.6.39:
   version "0.6.39"
@@ -3607,9 +3612,9 @@ type-is@~1.6.10, type-is@~1.6.15:
     media-typer "0.3.0"
     mime-types "~2.1.15"
 
-typescript@^2.6.1:
-  version "2.7.1"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.7.1.tgz#bb3682c2c791ac90e7c6210b26478a8da085c359"
+typescript@^2.7.2:
+  version "2.7.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-2.7.2.tgz#2d615a1ef4aee4f574425cdff7026edf81919836"
 
 uglify-js@^2.6.1:
   version "2.8.29"
