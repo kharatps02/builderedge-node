@@ -76,7 +76,7 @@ export class RegisterOrgController {
             try {
                 const result = await this.dataModel.registerOrg(userInfo.organizationId, conn.refreshToken,
                     instanceUrl, grantedUserId, conn.accessToken);
-                response.cookie('access-token', result.access_token);
+                response.cookie('vanity-id', result.vanity_id);
                 response.redirect('/registeredSuccessfully/' + result.vanity_id);
 
             } catch (error) {
@@ -88,15 +88,15 @@ export class RegisterOrgController {
         const vanityKey = request.params.vanityKey;
         try {
             // Read Encrypted Access Token and clear it from cookies.
-            const accessToken = request.cookies['access-token'];
+            const vanityId = request.cookies['vanity-id'];
             // Clear access-token cookie
-            response.clearCookie('access-token');
+            response.clearCookie('vanity-id');
             const experience = request.cookies.experience;
 
             const result = await this.dataModel.registeredSuccessfully(vanityKey);
 
             // If the access token doesn't match with the one stored, throw error.
-            if (!accessToken || (result.access_token !== accessToken)) {
+            if (!vanityId || (result.vanity_id !== vanityId)) {
                 throw Error('Unauthorized');
             }
 
