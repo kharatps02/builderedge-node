@@ -53,7 +53,7 @@ export class ProjectController {
             let unauthorizedProjectIds: string[] = [];
             if (projectIds) {
                 unauthorizedProjectIds = projectIds.filter((v, i, a) => {
-                    return !(authorizedProjectIds.indexOf(v) > 0);
+                    return !(authorizedProjectIds.indexOf(v) > -1);
                 });
             }
             // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
