@@ -41,13 +41,23 @@ export class ProjectModel {
         });
     }
 
-    public insertManyStatements(queryObj: { text: string, values: any[] }, callback: (error: Error, results: any) => void) {
+    public async insertManyStatements(queryObj: { text: string, values: any[] }, callback?: (error?: Error, results?: any) => void): Promise<QueryResult> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
-        pgClient.connect();
-        pgClient.query(queryObj, (err, results) => {
-            pgClient.end();
-            callback(err, results);
-        });
+        try {
+            pgClient.connect();
+            const result= await pgClient.query(queryObj);
+            if(callback) {
+                callback(undefined, result);
+            }
+            return result;
+        } catch (error) {
+            if(callback) {
+                callback(error, undefined);
+            }
+            throw error;
+        } finally {
+            pgClient.end();            
+        }
     }
 
     /**

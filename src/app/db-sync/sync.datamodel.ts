@@ -1,6 +1,6 @@
 import { IOrgMaster } from './../../core/models/org-master';
 import { ProjectModel, IProjectDetails, ITaskDetails } from './../project/project.model';
-
+import * as _ from 'lodash';
 import * as request from "request";
 import { OrgMasterModel } from '../org-master/org-master.model';
 import { buildInsertStatements } from '../project/project.helper';
@@ -18,8 +18,8 @@ export class SyncDataModel {
      * @param params
      * @param salesforceResponseArray
      */
-    public syncSalesforceUserDetails(params: { vanity_id: string, session_id: string }, salesforceResponseArray: any[], callback: (done: boolean, error?: any) => void) {
-        const that = this;
+    public async syncSalesforceUserDetails(params: { vanity_id: string, session_id: string }, salesforceResponseArray: any[], callback?: (done: boolean, error?: any) => void): Promise<boolean> {
+
         try {
             const projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
 
@@ -34,89 +34,100 @@ export class SyncDataModel {
                 const queryConfig = buildInsertStatements(projectRecords, ['"Id"', '"External_Id__c"'], true, params.vanity_id);
                 console.log("query statement", queryConfig);
                 // Insert Projects records
-                that.projectModel.insertManyStatements(queryConfig, (error, projectResult) => {
-                    if (!error) {
-                        // console.log('In execMultipleStatment projectResult>>', projectResult);
-                        const salesforceRequestObj: { ProjectTasks: any[], Projects: any[] } = { ProjectTasks: [], Projects: [] };
-                        const pksExternalPksMap: { [key: string]: any } = {};
-                        const taskRecords: ITaskDetails[] = [];
+                const projectResult = await this.projectModel.insertManyStatements(queryConfig);
 
-                        // Prepared  object to update postgres id into salesforce databse
-                        projectResult.rows.forEach((row: IProjectDetails) => {
-                            pksExternalPksMap[row.External_Id__c + ''] = row.Id;
-                            salesforceRequestObj.Projects.push({ Id: row.External_Id__c, External_Id__c: row.Id });
+                // console.log('In execMultipleStatment projectResult>>', projectResult);
+                const salesforceRequestObj: { ProjectTasks: any[], Projects: any[] } = { ProjectTasks: [], Projects: [] };
+                const pksExternalPksMap: { [key: string]: any } = {};
+                const taskRecords: ITaskDetails[] = [];
+
+                // Prepared  object to update postgres id into salesforce databse
+                projectResult.rows.forEach((row: IProjectDetails) => {
+                    pksExternalPksMap[row.External_Id__c + ''] = row.Id;
+                    salesforceRequestObj.Projects.push({ Id: row.External_Id__c, External_Id__c: row.Id });
+                });
+
+                salesforceResponseArray.forEach((projectRecord) => {
+                    const projectId = pksExternalPksMap[projectRecord['Id']] || projectRecord['External_Id__c'];
+                    if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
+                        projectRecord.series.forEach((taskRecord: ITaskDetails) => {
+                            taskRecord['Project__c'] = projectId;
+                            taskRecords.push(taskRecord);
                         });
+                    }
+                });
 
-                        salesforceResponseArray.forEach((projectRecord) => {
-                            const projectId = pksExternalPksMap[projectRecord['Id']] || projectRecord['External_Id__c'];
-                            if (projectRecord.series && projectRecord.series.length > 0 && projectId) {
-                                projectRecord.series.forEach((taskRecord: ITaskDetails) => {
-                                    taskRecord['Project__c'] = projectId;
-                                    taskRecords.push(taskRecord);
-                                });
-                            }
-                        });
+                if (taskRecords && taskRecords.length) {
+                    const taskChunks = _.chunk(taskRecords, 34464 / 12);
+                    try {
+                        for (const chunk of taskChunks) {
 
-                        if (taskRecords && taskRecords.length) {
-                            // let rec1: ITaskDetails[];
-                            // if (taskRecords.length > 34464 * 12) {
-
-                            // }
-
-                            // taskRecords.slice(34464 / 12)
-                            const tasksQueryConfig = buildInsertStatements(taskRecords, ['"Id"', '"External_Id__c"'], false);
-                            that.projectModel.insertManyStatements(tasksQueryConfig, (error1, taskResult) => {
-                                if (!error1) {
-                                    // console.log('In execMultipleStatment task taskResult>>', taskResult);
-
-                                    // Prepared  object to update postgres id into salesforce databse
-                                    taskResult.rows.forEach((row: ITaskDetails) => {
-                                        salesforceRequestObj.ProjectTasks.push({ Id: row.External_Id__c, External_Id__c: row.Id });
-                                    });
-                                } else {
-                                    console.log('In execMultipleStatment task error>>', error1);
-                                }
-
-                                // call salesforce endpoints to update postgres id into salesforce databse
-                                if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0 ||
-                                    salesforceRequestObj.ProjectTasks && salesforceRequestObj.ProjectTasks.length > 0) {
-                                    const requestData = {
-                                        Data__c: JSON.stringify(salesforceRequestObj),
-                                    };
-                                    if (params.session_id) {
-                                        that.postRequestOnSalesforce(params, requestData);
-                                        callback(true);
-                                    }
-                                }
+                            const tasksQueryConfig = buildInsertStatements(chunk, ['"Id"', '"External_Id__c"'], false);
+                            const taskResult = await this.projectModel.insertManyStatements(tasksQueryConfig);
+                            taskResult.rows.forEach((row: ITaskDetails) => {
+                                salesforceRequestObj.ProjectTasks.push({ Id: row.External_Id__c, External_Id__c: row.Id });
                             });
-
-
-                        } else {
-                            // call salesforce endpoints to update postgres id into salesforce databse
-                            if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0) {
+                            if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0 ||
+                                salesforceRequestObj.ProjectTasks && salesforceRequestObj.ProjectTasks.length > 0) {
                                 const requestData = {
                                     Data__c: JSON.stringify(salesforceRequestObj),
                                 };
                                 if (params.session_id) {
-                                    that.postRequestOnSalesforce(params, requestData);
-                                    callback(true);
+                                    this.postRequestOnSalesforce(params, requestData);
                                 }
                             }
                         }
-                    } else {
-                        console.log('In execMultipleStatment error>>', error);
-                        callback(false, error);
+                        if (callback) {
+                            callback(true);
+                        }
+                        return true;
+                    } catch (error) {
+                        console.log('In execMultipleStatment task error>>', error);
+                        if (callback) {
+                            callback(false, error);
+                        }
+                        return false;
                     }
-                });
+
+                    // Chunking logic without lodash.
+                    // let i, j, temparray: any[], chunk = 34464 / 12;
+                    // for (i = 0, j = taskRecords.length; i < j; i += chunk) {
+                    //     temparray = taskRecords.slice(i, i + chunk);
+                    //     // do whatever
+                    // }
+
+                    // taskRecords.slice(34464 / 12)
+                } else {
+                    // call salesforce endpoints to update postgres id into salesforce database
+                    if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0) {
+                        const requestData = {
+                            Data__c: JSON.stringify(salesforceRequestObj),
+                        };
+                        if (params.session_id) {
+                            this.postRequestOnSalesforce(params, requestData);
+                            if (callback) {
+                                callback(true);
+                            }
+                            return true;
+                        }
+                    }
+                }
+
             } else {
                 console.log('Nothing to sync..');
-                callback(true);
+                if (callback) {
+                    callback(true);
+                }
+                return true;
             }
         } catch (e) {
             console.log(e);
-            callback(false, e);
+            if (callback) {
+                callback(false, e);
+            }
+            return true;
         }
-
+        return false;
     }
     /**
      * @description Sent post request on salesforce endpoints
