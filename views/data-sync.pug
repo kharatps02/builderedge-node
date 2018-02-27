@@ -34,8 +34,11 @@ block content
             .panel-body
                 //- form.form-inline(name='userInfoForm', action='/sync/initial/' + vanityKey, method='GET')
                     .form-group
-                h3  Please wait while we sync the initial data. DO NOT REFRESH THE PAGE.
-                p   loading... Loader will appear here.
+                h3  Please wait while we sync the initial data. You will automatically be redirected to Salesforce once the sync is complete.
+                h3  DO NOT REFRESH THE PAGE.
+
+                p   loading...
+                p   Depending on the data, it may take longer. If you think there is an error please see the console by pressing F12 and contact support with the details.
                     input#appUrl.form-control(type='hidden', name='appUrl' value=appUrl)
                     //- button.btn.btn-primary.submitbtn(type='submit') Done!
     //- script(src='/common/js/jquery-3.1.0.min.js')

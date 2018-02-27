@@ -17,7 +17,7 @@ export class SyncRoutes {
         const router = express.Router();
         // POC1
         router.get('/sync', this.syncController.index.bind(this.syncController));
-        router.get('/events', sse, this.syncController.events.bind(this.syncController));
+        router.get('/events', sse({ flushAfterWrite: true }), this.syncController.events.bind(this.syncController));
 
         // router.post('/sync/initial/:vanityKey', this.syncController.syncInitial.bind(this.syncController));
         router.post('/sync/initial/:vanityKey', timeout('100000s'), this.syncController.syncDataInitial.bind(this.syncController));

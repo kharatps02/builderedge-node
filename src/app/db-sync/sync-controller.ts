@@ -31,6 +31,7 @@ export class SyncController {
     this.eventBus.addListener("orgSynched", (data: any) => {
       console.log("Subscribing to the new org", data);
       this.addNewOrgToSubscribers(data);
+      this.eventBus.emit('sendEvent', { event: 'initialSyncDone', data });
     });
     this.eventBus.addListener("error", (data: any) => {
       console.log("Subscribing to error");
@@ -46,6 +47,7 @@ export class SyncController {
     res: ISseResponse,
     next: express.NextFunction
   ) {
+
     res.sse.event('hello', 'hello');
     this.eventBus.addListener(
       "sendEvent",

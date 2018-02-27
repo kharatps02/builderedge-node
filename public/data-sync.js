@@ -1,19 +1,22 @@
 var source = new EventSource("/events");
-source.addEventListener((event) => {
+source.addEventListener('initialSyncDone', (event) => {
     console.log(event);
     if (event.type === "initialSyncDone") {
-        if (event.data && event.data.appUrl) {
+        const data = JSON.parse(event.data);
+        if (data && data.appUrl) {
             console.log('Sync successful.', event);
-            alert('Sync successful.');
-            window.location = event.data.appUrl;
+            window.location = data.appUrl;
         } else {
             alert("Sync failed. Error fetching App URL");
-            console.log('Sync failed.', event);
+            console.error('Sync failed.', event);
         }
     }
+});
+source.addEventListener('error', (event) => {
+    console.log(event);
     if (event.type === "error") {
-        alert("Sync failed. See console for more details");
-        console.log('Sync failed.', event);
+        // alert("Sync failed. See console for more details");
+        console.error('Sync failed.', event);
     }
 });
 // window.location = document.getElementById("appUrl").value;
