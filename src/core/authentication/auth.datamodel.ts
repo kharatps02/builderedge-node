@@ -5,6 +5,7 @@ import { IOAuthToken } from "./oauth-model";
 import { utils } from "../../utils/utils";
 import * as rp from 'request-promise';
 import * as request from 'request';
+import { OrgError } from '../../utils/errors';
 
 export class AuthDataModel {
     constructor() {
@@ -27,7 +28,7 @@ export class AuthDataModel {
                 const token = await this.getOAuthToken(orgConfig.getRefreshToken());
                 return token;
             } else {
-                throw new Error("Not a valid user.");
+                throw new OrgError("Not a valid org.");
             }
         } finally {
             await utils.endClient(pgClient);

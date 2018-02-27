@@ -6,6 +6,7 @@ import { OrgMasterModel } from '../app/org-master/org-master.model';
 import { IOrgMaster } from './models/org-master';
 import { Constants } from '../config/constants';
 import { utils } from '../utils/utils';
+import { AppError } from '../utils/errors';
 export class SFQueryService {
     private orgMasterModel: OrgMasterModel;
 
@@ -37,7 +38,7 @@ export class SFQueryService {
         let orgConfig!: IOrgMaster;
         try {
             if (!(orgId || vanityId)) {
-                throw Error("Could not locate the org.");
+                throw new AppError("Could not locate the org.");
             }
             if (orgId) {
                 orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
@@ -86,13 +87,13 @@ export class SFQueryService {
         try {
             const response = await rp(options);
             if (!response) {
-                throw new Error('No response');
+                throw new AppError('No response');
             } else {
                 return response as T;
             }
         } catch (error) {
             if (error instanceof StatusCodeError || error instanceof RequestError || error instanceof TransformError) {
-                throw error.error || Error(error.message);
+                throw error.error || new AppError(error.message);
             }
             throw error;
         }
@@ -118,7 +119,7 @@ export class SFQueryService {
         try {
             const response = await this.getDataUsingAccessToken<ISFResponse<T>>(url, accessToken, qs, data, method);
             if (!response) {
-                throw new Error('No response');
+                throw new AppError('No response');
             } else {
                 if (appendRecords && appendRecords.length > 0) {
                     response.records.push(...appendRecords);

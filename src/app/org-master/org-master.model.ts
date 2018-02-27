@@ -3,6 +3,7 @@ import { Constants } from '../../config/constants';
 import { error } from 'util';
 import { IOrgMaster } from '../../core/models/org-master';
 import { utils } from '../../utils/utils';
+import { AppError, OrgError } from '../../utils/errors';
 
 /**
  * @description Handles all database functions for OrgMaster table
@@ -44,9 +45,9 @@ export class OrgMasterModel {
                 return results.rows[0];
             } else {
                 if (callback) {
-                    callback(new Error('no data for the given vanity id'), undefined);
+                    callback(new OrgError('no data for the given vanity id'), undefined);
                 }
-                throw new Error('no data for the given vanity id');
+                throw new OrgError('no data for the given vanity id');
             }
 
         } catch (error) {
@@ -95,7 +96,7 @@ export class OrgMasterModel {
         if (result && result.rowCount > 0) {
             return result.rowCount > 0;
         } else {
-            throw Error("No record found");
+            throw new AppError("No record found");
         }
     }
 }
