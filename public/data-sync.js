@@ -16,4 +16,4 @@ source.onmessage = function (event) {
         console.log('Sync failed.', event);
     }
 };
-window.location = document.getElementById("appUrl").value;
+// window.location = document.getElementById("appUrl").value;

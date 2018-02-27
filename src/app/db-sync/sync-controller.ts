@@ -96,6 +96,7 @@ export class SyncController {
     const vanityKey = req.params.vanityKey;
     const appUrl = req.body.appUrl;
     try {
+      res.render("data-sync", { appUrl })
       const projects = await this.projectSfModel.getAllProjectsAndTasks(
         accessToken,
         vanityKey,
@@ -107,13 +108,16 @@ export class SyncController {
       const done = await this.syncDataModel.syncSalesforceUserDetails({ vanity_id: vanityKey, session_id: accessToken }, formatedProjects);
 
       if (done) {
-        this.eventBus.emit("orgSynched", { appUrl, vanityKey });
-        res.render("data-sync", { appUrl });
-        return;
+        // res.render("data-sync", { appUrl });
+        setTimeout(() => {
+          this.eventBus.emit("orgSynched", { appUrl, vanityKey });
+        }, 5000);
+
       } else {
-        this.eventBus.emit("error", formatedProjects);
-        res.render("data-sync", { appUrl });
-        return;
+        // res.render("data-sync", { appUrl });
+        setTimeout(() => {
+          this.eventBus.emit("error", formatedProjects);
+        }, 5000);
         // reject('sync failed');
 
         // res.render('data-sync', { appUrl });
