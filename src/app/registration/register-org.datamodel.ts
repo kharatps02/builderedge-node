@@ -1,4 +1,4 @@
-import { ConnectionError } from './../../utils/errors';
+import { ConnectionError, OrgError } from './../../utils/errors';
 import { ServerResponse } from './../../core/server-response';
 import { Client } from "pg";
 import { Constants } from "../../config/constants";
@@ -65,7 +65,7 @@ export class RegisterOrgDataModel {
             if (result.rows.length > 0) {
                 return result.rows[0];
             } else {
-                throw new Error("Not a valid user.");
+                throw new OrgError("Not a valid org.");
             }
         } finally {
             await utils.endClient(pgClient);
@@ -82,7 +82,7 @@ export class RegisterOrgDataModel {
     //         const outerQueryStr = "SELECT user_id FROM CUSTOMER WHERE org_id = $1 limit 1";
     //         const result = await pgClient.query(outerQueryStr, [orgId]);
     //         if (result.rows.length === 0) {
-    //             throw Error('No records found.');
+    //             throw AppError('No records found.');
     //         } else {
     //             // const queryStr = "UPDATE CUSTOMER SET VANITYURLTEXT = $1 WHERE orgID = $2";
     //             // const queryStr = "UPDATE org_id SET VANITYURLTEXT = $1 WHERE orgID = $2";

@@ -104,28 +104,25 @@ export class SyncController {
         projects.records
       );
 
-      this.syncDataModel.syncSalesforceUserDetails(
-        { vanity_id: vanityKey, session_id: accessToken },
-        formatedProjects,
-        (done) => {
-          if (done) {
-            this.eventBus.emit("orgSynched", { appUrl, vanityKey });
-            res.render("data-sync", { appUrl });
-            return;
-          } else {
-            this.eventBus.emit("error", formatedProjects);
-            res.render("data-sync", { appUrl });
-            return;
-            // reject('sync failed');
+      const done = await this.syncDataModel.syncSalesforceUserDetails({ vanity_id: vanityKey, session_id: accessToken }, formatedProjects);
 
-            // res.render('data-sync', { appUrl });
-            //     res.render('data-sync', { appUrl }, (err, html) => {
-            //     console.log(err, html);
-            //     this.eventBus.emit('sendEvent', { event: 'initialSyncDone', data: { error: 'There was a problem synching your data.' } });
-            //     return;
-            // });
-          }
-        });
+      if (done) {
+        this.eventBus.emit("orgSynched", { appUrl, vanityKey });
+        res.render("data-sync", { appUrl });
+        return;
+      } else {
+        this.eventBus.emit("error", formatedProjects);
+        res.render("data-sync", { appUrl });
+        return;
+        // reject('sync failed');
+
+        // res.render('data-sync', { appUrl });
+        //     res.render('data-sync', { appUrl }, (err, html) => {
+        //     console.log(err, html);
+        //     this.eventBus.emit('sendEvent', { event: 'initialSyncDone', data: { error: 'There was a problem synching your data.' } });
+        //     return;
+        // });
+      }
       // res.render("data-sync", { appUrl });
     } catch (err) {
       res.render("error", { appUrl, err });

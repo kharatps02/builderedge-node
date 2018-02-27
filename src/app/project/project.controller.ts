@@ -11,6 +11,7 @@ import { PubService } from "../db-sync/pub-service";
 import { forEach } from "async";
 import { Enums } from "../../config/enums";
 import { ProjectSfModel } from './project.sfmodel';
+import { AppError } from '../../utils/errors';
 
 export class ProjectController {
     private projectSfModel: ProjectSfModel;
@@ -35,7 +36,13 @@ export class ProjectController {
         try {
             const sessionId = req.headers['session-id'] as string;
             const orgId = req.headers['org-id'] as string;
-            const receivedProjectIds: string[] = req.query.p || req.body;
+            let receivedProjectIds: string[] | string = req.query.p || req.body;
+            let projectIds: string[];
+            if (receivedProjectIds && typeof receivedProjectIds === 'string') {
+                projectIds = receivedProjectIds.split(',');
+            } else {
+                projectIds = receivedProjectIds as string[];
+            }
             if (!sessionId || !orgId) {
                 throw "Unauthorized request";
             }
@@ -43,9 +50,18 @@ export class ProjectController {
             const orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
             // Get authorized project ids first.
             const authorizedProjectIds: string[] = await this.projectSfModel.getAuthorizedProjectIds(receivedProjectIds, orgConfig.api_base_url, sessionId);
+            let unauthorizedProjectIds: string[] = [];
+            if (projectIds) {
+                unauthorizedProjectIds = projectIds.filter((v, i, a) => {
+                    return !(authorizedProjectIds.indexOf(v) > 0);
+                });
+            }
             // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
             const data = await this.projectModel.getAllProjectsAsync(authorizedProjectIds);
-            res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: data });
+            if (!data || data.length === 0) {
+                throw new AppError('You do not have any project authorized to you.')
+            }
+            res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: data, error: { unauthorized: unauthorizedProjectIds } });
         } catch (err) {
             res.status(500).send(err);
             // const err1 = { status: Enums.RESPONSE_STATUS.ERROR, message: Constants.MESSAGES.SOMETHING_WENT_WRONG};

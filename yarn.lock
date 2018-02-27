@@ -102,6 +102,10 @@
     "@types/express" "*"
     "@types/glob" "*"
 
+"@types/lodash@^4.14.104":
+  version "4.14.104"
+  resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.104.tgz#53ee2357fa2e6e68379341d92eb2ecea4b11bb80"
+
 "@types/method-override@0.0.31":
   version "0.0.31"
   resolved "https://registry.yarnpkg.com/@types/method-override/-/method-override-0.0.31.tgz#ec12b738c1b2a74a5d3d8af73c7d4952ad9c14d2"
@@ -2243,7 +2247,7 @@ lodash@^3.10.1, lodash@~3.10.1:
   version "3.10.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
 
-lodash@^4.11.1, lodash@^4.13.1, lodash@^4.17.4, lodash@~4.17.4:
+lodash@^4.11.1, lodash@^4.13.1, lodash@^4.17.4, lodash@^4.17.5, lodash@~4.17.4:
   version "4.17.5"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.5.tgz#99a92d65c0272debe8c96b6057bc8fbfa3bed511"
 

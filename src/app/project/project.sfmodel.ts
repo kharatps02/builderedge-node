@@ -5,6 +5,7 @@ import { ISFResponse, SFResponse } from './../db-sync/sf-response';
 import { Constants } from '../../config/constants';
 import { SFQueryService } from '../../core/sf-query.service';
 import { IOrgMaster } from '../../core/models/org-master';
+import { AppError } from '../../utils/errors';
 export class ProjectSfModel {
     private sfQueryService: SFQueryService;
     private orgMasterModel: OrgMasterModel;
@@ -73,7 +74,7 @@ export class ProjectSfModel {
                     orgId
                 );
             } else {
-                throw Error('Please provide vanity id or org id');
+                throw new AppError('Please provide vanity id or org id');
             }
             let sfResponsePerRequest: ISFResponse<IProjectDetails> = new SFResponse<
                 IProjectDetails
@@ -93,7 +94,6 @@ export class ProjectSfModel {
             };
             do {
                 for (const element of sfResponsePerRequest.records) {
-                    // TODO: Fix:  StatusCodeError: 400 - "[{\"message\":\"invalid query locator\",\"errorCode\":\"INVALID_QUERY_LOCATOR\"}]"
                     while (element.Project_Tasks__r && !element.Project_Tasks__r.done) {
                         element.Project_Tasks__r = await this.sfQueryService.getDataAppendRest(
                             config.api_base_url + element.Project_Tasks__r.nextRecordsUrl!,

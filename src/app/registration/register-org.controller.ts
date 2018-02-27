@@ -5,6 +5,7 @@ import { Constants } from '../../config/constants';
 import { utils } from '../../utils/utils';
 import { RegisterOrgDataModel } from './register-org.datamodel';
 import { UserInfo } from 'jsforce/connection';
+import { AppError } from '../../utils/errors';
 
 pg.defaults.ssl = true;
 pg.defaults.poolSize = 20;
@@ -97,7 +98,7 @@ export class RegisterOrgController {
 
             // If the access token doesn't match with the one stored, throw error.
             if (!vanityId || (result.vanity_id !== vanityId)) {
-                throw Error('Unauthorized');
+                throw new AppError('Unauthorized');
             }
 
             const appUrl = `${result.api_base_url}${experience === 'lightning' ? '/one/one.app?source=aloha#/n/Gantt_Chart' : '/apex/GanttChart'}`;
