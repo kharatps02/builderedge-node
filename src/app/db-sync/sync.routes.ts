@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { ISseResponse, sse } from '@toverux/expresse';
 import { SyncController } from './sync-controller';
+import * as timeout from "connect-timeout";
 /**
  * @description Project routs configuration.
  */
@@ -19,8 +20,8 @@ export class SyncRoutes {
         router.get('/events', sse, this.syncController.events.bind(this.syncController));
 
         // router.post('/sync/initial/:vanityKey', this.syncController.syncInitial.bind(this.syncController));
-        router.post('/sync/initial/:vanityKey', this.syncController.syncDataInitial.bind(this.syncController));
-        
+        router.post('/sync/initial/:vanityKey', timeout('100000s'), this.syncController.syncDataInitial.bind(this.syncController));
+
         return router;
     }
 }
