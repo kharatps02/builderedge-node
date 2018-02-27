@@ -1,5 +1,5 @@
 var source = new EventSource("/events");
-source.onmessage = function (event) {
+source.addEventListener((event) => {
     console.log(event);
     if (event.type === "initialSyncDone") {
         if (event.data && event.data.appUrl) {
@@ -15,5 +15,5 @@ source.onmessage = function (event) {
         alert("Sync failed. See console for more details");
         console.log('Sync failed.', event);
     }
-};
+});
 // window.location = document.getElementById("appUrl").value;
