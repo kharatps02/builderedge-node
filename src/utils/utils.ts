@@ -10,10 +10,4 @@ export namespace utils {
         // TODO: write decryption logic here
         return data;
     }
-    export async function endClient(pgClient: Client) {
-        return await pgClient.end((err) => console.error(`At End pgClient `, err));
-    }
-    export async function connectClient(pgClient: Client) {
-        return await pgClient.connect((err) => { throw new ConnectionError('Could not connect to database ', err); });
-    }
 }

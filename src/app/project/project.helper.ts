@@ -1,9 +1,11 @@
+import { QueryConfig } from 'pg';
 import { ITaskDetails, IProjectDetails } from './project.model';
+
 /**
+ * formatProjectAndTaskDetails
  * @description This function is formatting data as per Gantt chart
  * @param projectArray
  */
-
 export function formatProjectAndTaskDetails(projectArray: any[]) {
     const newProjectArray: any[] = [];
     projectArray.forEach((project: any) => {
@@ -22,47 +24,39 @@ export function formatProjectAndTaskDetails(projectArray: any[]) {
     });
     return newProjectArray;
 }
-
+/**
+ * formatTaskDetails
+ * @description Formats task details for gantt.
+ * @param task 
+ */
 export function formatTaskDetails(task: { [key: string]: any }) {
     const newTask = task;
-    // newTask['id'] = task['Id'];
     newTask['name'] = task['Name'] || '';
     newTask['start'] = new Date(task['Start_Date__c']).getTime();
     newTask['end'] = new Date(task['End_Date__c']).getTime();
-
-    // newTask['description'] = task['Description__c'] || '';
-    // newTask['start_date'] = task['Start_Date__c'];
-    // newTask['end_date'] = task['End_Date__c'];
-    // newTask['completion_per'] = task['Completion_Percentage__c'];
-    // newTask['status'] = task['Status__c'];
-    // newTask['created_by'] = task['CreatedById'];
-    // newTask['updated_by'] = task['LastModifiedById'];
-    // newTask['created_at'] = task['CreatedDate'];
-    // newTask['updated_at'] = task['LastModifiedDate'];
-    // newTask['external_id'] = task['External_Id__c'];
-    // newTask['project_ref_id'] = task['Project__c'];
     return newTask;
 }
+/**
+ * formatProjectDetails
+ * @description Formats project details for gantt
+ * @param project 
+ */
 export function formatProjectDetails(project: { [key: string]: any, series: any[] }) {
     const newProject = project;
-    // newProject['id'] = project['Id'];
     newProject['name'] = project['Name'] || '';
     newProject['start'] = new Date(project['Start_Date__c']).getTime();
     newProject['end'] = new Date(project['End_Date__c']).getTime();
-
-    // newProject['description'] = project['Description__c'] || '';
-    // newProject['start_date'] = project['Start_Date__c'];
-    // newProject['end_date'] = project['End_Date__c'];
-    // newProject['completion_per'] = project['Completion_Percentage__c'];
-    // newProject['status'] = project['Status__c'];
-    // newProject['created_by'] = project['CreatedById'];
-    // newProject['updated_by'] = project['LastModifiedById'];
-    // newProject['created_at'] = project['CreatedDate'];
-    // newProject['updated_at'] = project['LastModifiedDate'];
-    // newProject['external_id'] = project['External_Id__c'];
     return newProject;
 }
 
+/**
+ * buildInsertStatements
+ * @description Builds statements for insert projects or tasks.
+ * @param rows array of project or task.
+ * @param returnFieldArr returns fields
+ * @param isProjectRequest Indicate if it's a project or task array. based on project or tasks request.
+ * @param internalOrgId (Optional) internal org id.
+ */
 export function buildInsertStatements(rows: any[], returnFieldArr: any[] = [], isProjectRequest: boolean = true, internalOrgId?: string) {
     const params: any[] = [];
     const chunks: any[] = [];
@@ -135,49 +129,18 @@ export function buildInsertStatements(rows: any[], returnFieldArr: any[] = [], i
     };
 }
 
-// Not being used.
-export function formatSalesForceObject(params: { [key: string]: any }) {
-
-    const record: { [key: string]: any } = {};
-
-    if (params.name) {
-        record['Name'] = params.name;
-    }
-    if (params.description) {
-        record['Description__c'] = params.description;
-    }
-    if (params.start_date) {
-        record['Start_Date__c'] = params.start_date;
-    }
-    if (params.end_date) {
-        record['End_Date__c'] = params.end_date;
-    }
-    if (params.completion_per) {
-        record['Completion_Percentage__c'] = params.completion_per;
-    }
-    if (params.status) {
-        record['Status__c'] = params.status;
-    }
-
-    if (params.id) {
-        record['External_Id__c'] = params.id;
-    }
-
-    if (params.external_id) {
-        record['Id'] = params.external_id;
-    }
-
-    if (params.project_ref_id) {
-        record['Project__c'] = params.project_ref_id;
-    }
-    return record;
-}
 export function swapSfId(item: { [key: string]: any }) {
     const externalId = item['External_Id__c'];
     item['External_Id__c'] = item['Id'];
     item['Id'] = externalId;
 }
-export function buildUpdateStatements(params: ITaskDetails | IProjectDetails, isProject: boolean): { text: string, values: any[] } {
+/**
+ * buildUpdateStatements
+ * @description Builds update query config for projects or tasks.
+ * @param params Array of project or tasks
+ * @param isProject recognize if it's a project or task array
+ */
+export function buildUpdateStatements(params: ITaskDetails | IProjectDetails, isProject: boolean): QueryConfig {
     const queryValues = [];
     const valueClause = [];
 
@@ -219,7 +182,6 @@ export function buildUpdateStatements(params: ITaskDetails | IProjectDetails, is
         updateQueryString = 'UPDATE "Project_Task__c"';
     }
     updateQueryString += '  SET ' + valueClause.join(', ') + ' WHERE "Id"=$' + (valueClause.length + 1);
-    // console.log('updateQueryString', updateQueryString, queryValues);
     return {
         text: updateQueryString,
         values: queryValues,

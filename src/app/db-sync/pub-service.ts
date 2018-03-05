@@ -16,26 +16,47 @@ export class PubService {
     }
 
     /**
+     * Publishes data to salesforce Platform event using vanity Id
+     * @param vanityId Vanity Id of the Org
+     * @param data Data to be published. A stringified JSON.
+     * @param callback callback function.
+     */
+    public async publishWithVanityId(vanityId: string, data: string, callback?: (error: Error, eventResponse: any) => void) {
+        const conn = await this.sfQueryService.getConnectionAsIntegUser(undefined, vanityId);
+        const config = await this.orgMasterModel.getOrgConfigByVanityId(vanityId);
+        return this.publish(conn, config.org_id, data, callback);
+    }
+
+    /**
+     * Publishes data to salesforce Platform event using Org Id
+     * @param orgId Org Id of the Org
+     * @param data Data to be published. A stringified JSON.
+     * @param callback callback function.
+     */
+    public async publishWithOrgId(orgId: string, data: string, accessToken?: string, callback?: (error: Error, eventResponse: any) => void) {
+        let conn: jsforce.Connection;
+        if (accessToken) {
+            const orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
+            conn = await this.sfQueryService.getConnectionWithToken(orgConfig.api_base_url, accessToken);
+        } else {
+            conn = await this.sfQueryService.getConnectionAsIntegUser(orgId);
+        }
+        return this.publish(conn, orgId, data, callback);
+    }
+    /**
      *
      * @description Publishes the data to the Salesforce Platform Event.
      * @param orgId Org id
-     * @param data Data to be published
+     * @param data Data to be published. It should be stringified JSON.
      * @param callback callback
      */
-    public async publish(orgId: string, data: any, callback?: (error: Error, eventResponse: any) => void) {
-        const conn = await this.sfQueryService.getConnectionAsIntegUser(orgId);
+    private async publish(conn: jsforce.Connection, orgId: string, data: string, callback?: (error: Error, eventResponse: any) => void) {
         // event to check when the access token is refreshed.
         // We can save it if we want any per user logic.
         conn.on("refresh", (token: string, response: any) => {
             console.log(token);
             this.orgMasterModel.updateAccessToken(orgId, token);
         });
-        //// Manually refreshes the access token using refresh token
-        // conn.oauth2.refreshToken('5Aep8613hy0tHCYdhwfV72zcrObyt1SiQpoPS6OQCtnA8L_SxzVeSMEA6VgyW4nVKw.t6iwjPnxPRxLHAU3HEO1',
-        //     (err: any, results: any) => {
-        //         console.log(err, results);
-        //     });
-
         const event = conn.sobject(Constants.SALESFORCE_PLATFORM_EVENTS_CONFIG.EVENT_NAME);
         const result = await event.create({ Data__c: data }, (err, ret) => {
             if (err) {
@@ -47,5 +68,6 @@ export class PubService {
                 callback(err, ret);
             }
         });
+        return result;
     }
 }

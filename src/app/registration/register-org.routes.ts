@@ -5,24 +5,18 @@ import * as express from 'express';
  */
 export class RegisterOrgRoutes {
     private registerOrgController: RegisterOrgController;
-    //  private authentication: Authentication;
     constructor() {
         this.registerOrgController = new RegisterOrgController();
-        //  this.authentication = new Authentication();
     }
 
     get routes() {
         const router = express.Router();
-        // router.get('/', this.registerOrgController.index);
         router.get('/register', this.registerOrgController.registerIndex.bind(this.registerOrgController));
+        // Use the following route to initiate registration from node side.
         router.get('/register/:isSandBoxUser?', this.registerOrgController.register.bind(this.registerOrgController));
-        // router.get('/registerUser/:orgid', this.registerOrgController.registerUser);
         router.get('/authorizeUser', this.registerOrgController.authorizeUser.bind(this.registerOrgController));
         router.get('/oauth/callback', this.registerOrgController.oAuthCallback.bind(this.registerOrgController));
         router.get('/registeredSuccessfully/:vanityKey', this.registerOrgController.registeredSuccessfully.bind(this.registerOrgController));
-        // router.get('/isRegisteredUser', this.registerOrgController.isRegisteredUser);
-        // router.get('/registerUserWithVanityText', this.registerOrgController.registerUserWithVanityText);
-
         return router;
     }
 }
