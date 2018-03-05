@@ -7,24 +7,24 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "nodemon",
+            "preLaunchTask": "grunt",
+            "restart": true,
+            "name": "Debug using node",
+            "program": "${workspaceFolder}\\bin\\www",
+            "outFiles": [
+                "${workspaceFolder}/**/*.js"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug using nodemon",
             "runtimeExecutable": "nodemon",
             "preLaunchTask": "grunt",
             "program": "${workspaceFolder}/bin/www",
             "restart": false,
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen"
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "preLaunchTask": "grunt",
-            "restart": true,
-            "name": "Launch Program",
-            "program": "${workspaceFolder}\\bin\\www",
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
         }
     ]
 }
