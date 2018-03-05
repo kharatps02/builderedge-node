@@ -61,9 +61,7 @@ export class Server {
     // configure pug
     this.app.set("views", path.join(__dirname, "views"));
     this.app.set('view engine', 'pug');
-    // this.app.engine('html', require('ejs').renderFile);
-    // this.app.set("view engine", "html");
-    // this.app.engine('html', require('ejs').renderFile);
+
     this.app.use(express.static(path.join(__dirname, "public")));
 
     this.app.use((req, res, next) => {

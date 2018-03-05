@@ -54,6 +54,7 @@ export class ProjectSfModel {
 
     /**
      * getAllProjectsAndTasks
+     * @description Gets all projects and tasks. Also handles the nextRecord URL to fetch all records (if records>2000)
      * @param accessToken 
      * @param vanityKey 
      * @param orgId 

@@ -15,7 +15,6 @@ source.addEventListener('initialSyncDone', (event) => {
 source.addEventListener('error', (event) => {
     console.log(event);
     if (event.type === "error") {
-        // alert("Sync failed. See console for more details");
         console.error('Sync failed.', event);
     }
 });

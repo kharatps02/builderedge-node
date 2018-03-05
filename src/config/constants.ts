@@ -19,16 +19,13 @@ export namespace Constants {
     export const SYNC_QUERIES = {
         // tslint:disable-next-line:max-line-length
         ALL: '/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Start_Date__c,Status__c,SystemModstamp,(SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Project__c,Start_Date__c,Status__c,SystemModstamp+FROM+Project_Tasks__r)+FROM+Project__c',
-        // tslint:disable-next-line:max-line-length
-        PROJECT: (timeStamp: any) => `/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Start_Date__c,Status__c,SystemModstamp+FROM+Project__c+WHERE+SystemModstamp>=${timeStamp}`,
-        // tslint:disable-next-line:max-line-length
-        PROJECT_TASK: (timeStamp: any) => `/services/data/v41.0/query?q=SELECT+Completion_Percentage__c,CreatedById,CreatedDate,Description__c,End_Date__c,External_Id__c,Id,LastModifiedById,LastModifiedDate,Name,Project__c,Start_Date__c,Status__c,SystemModstamp+FROM+Project_Task__c+WHERE+SystemModstamp>=${timeStamp}`,
+        // Add more queries here:
     };
-    export const MESSAGES = {
-        SAVED: 'Data saved successfully',
-        UPDATED: 'Data updated successfully',
-        SOMETHING_WENT_WRONG: 'something went wrong',
-        INVALID_REQUEST_PARAMS: 'Invalid request params',
+    export namespace MESSAGES {
+        export const SAVED = 'Data saved successfully';
+        export const UPDATED = 'Data updated successfully';
+        export const SOMETHING_WENT_WRONG = 'something went wrong';
+        export const INVALID_REQUEST_PARAMS = 'Invalid request params';
     };
 
     export const COMETD = {
@@ -39,8 +36,6 @@ export namespace Constants {
         grant_type: process.env.OAUTH_GRANT_TYPE || "refresh_token",
         client_id: process.env.OAUTH_CLIENT_ID || "3MVG9d8..z.hDcPJvS1kmRShyWMlrH2GkDXefwC.1dAylEi0bWd3yh6Q7xOlp3_9Ex9XAj_MJBiHPbtQ7YwKu",
         client_secret: process.env.OAUTH_CLIENT_SECRET || "6637042274278747657",
-        // This URI was set at Salesforce OAuth Configuration
-        // redirectUri: process.env.OAUTH_REDIRECT_URI || 'https://builderedge-poc.herokuapp.com/oauth/callback',
         redirectUri: process.env.OAUTH_REDIRECT_URI || 'http://localhost:4300/oauth/callback',
         method: process.env.OAUTH_METHOD || 'POST',
     };

@@ -1,69 +1,70 @@
+import { ISFEntity } from './../../core/models/sf-entity';
 import { SFResponse } from './../db-sync/sf-response';
-import { Client, QueryResult } from 'pg';
+import { Client, QueryResult, QueryConfig } from 'pg';
 import { error } from 'util';
 import * as async from 'async';
 
 import { Constants } from '../../config/constants';
 import { buildUpdateStatements } from './project.helper';
-// import *  as pg from 'pg';
 
 export class ProjectModel {
     private pgClient!: Client;
     constructor() {
 
     }
-    // Not being used.
-    public create(params: IProjectRequest, callback: (error: Error, results: any) => void) {
+    /**
+     * updateProjectsAndTasksAsync
+     * @description Updates the projects/tasks parallely.
+     * @param projectTaskQueryArray array of query configs for the projects/tasks to be updated.
+     */
+    public async updateProjectsAndTasksAsync(projectTaskQueryArray: QueryConfig[]) {
+        const tasks: Array<Promise<QueryResult>> = [];
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
-        const addQueryString = 'INSERT INTO PROJECT(name, start_date, end_date, completion_per, created_by, updated_by) VALUES ($1,$2,$3,$4,$5,$6)';
-        const addQueryValues = [params.name, params.start_date, params.end_date, params.completion_per, params.created_by, params.updated_by];
-        pgClient.query(addQueryString, addQueryValues, (err, results) => {
-            callback(err, results);
-            pgClient.end();
-        });
-    }
-
-    public updateProjectsOrTasks(projectTaskQueryArray: any[], callback: (error: Error, results: any) => void) {
-        const asyncTasks: Array<async.AsyncFunction<any, any>> = [];
-        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
-        pgClient.connect();
-
         projectTaskQueryArray.forEach((queryConfig) => {
-            asyncTasks.push((callback1) => {
-                console.log(queryConfig);
-                pgClient.query(queryConfig, callback1);
-            });
+            tasks.push(pgClient.query(queryConfig));
         });
-        async.parallel(asyncTasks, (error1: Error, results) => {
-            pgClient.end();
-            callback(error1, results);
+        return await Promise.all(tasks).then(r => {
+            try {
+                pgClient.end();
+            } finally { }
+            return r;
         });
     }
-
-    public async insertManyStatements(queryObj: { text: string, values: any[] }, callback?: (error?: Error, results?: any) => void): Promise<QueryResult> {
+    /**
+     * insertManyStatements
+     * @description Executes the given prepared statements in the query config, calls the callback and returns the promise with the result.
+     * @param queryConfig Query config object
+     * @param callback callback
+     */
+    public async insertManyStatements(queryConfig: QueryConfig, callback?: (error?: Error, results?: any) => void): Promise<QueryResult> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         try {
             pgClient.connect();
-            const result= await pgClient.query(queryObj);
-            if(callback) {
+            const result = await pgClient.query(queryConfig);
+            if (callback) {
                 callback(undefined, result);
             }
             return result;
         } catch (error) {
-            if(callback) {
+            try {
+                pgClient.end();
+            } finally { }
+            if (callback) {
                 callback(error, undefined);
             }
             throw error;
         } finally {
-            pgClient.end();            
+            pgClient.end();
         }
     }
 
     /**
      * getProjectExternalIdMap
+     * @description Gets a map of SF ids and Database Ids for Project
+     * @param callback returns the project ids.
      */
-    public getProjectExternalIdMap(callback: (projectId: any[]) => void) {
+    public getProjectExternalIdMap(callback: (projectIds: ISFEntity[]) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         pgClient.connect();
         pgClient.query('SELECT "Id", "External_Id__c" from "Project__c"', (err, results) => {
@@ -73,7 +74,10 @@ export class ProjectModel {
     }
 
     /**
-     * getProjectId
+     * getProjectIdByExternalId
+     * @description Gets database project Id by Salesforce project Id.
+     * @param externalId Salesforce Project Id
+     * @param callback callback
      */
     public getProjectIdByExternalId(externalId: string, callback: (projectId: number) => void) {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
@@ -83,12 +87,16 @@ export class ProjectModel {
             callback(results.rows[0].Id);
         });
     }
+
     /**
-     * getProjectExternalIdMap
+     * getAllProjectsAsync
+     * @description Gets all projects by project Ids. Returns a JSON formatted object from the database itself.
+     * For performance reasons the JSON transform is at PostgreSQL side. It can also be done in Node.js easily. MongoDB will give a right json out of the box.
+     * @param projectIds 
      */
     public async getAllProjectsAsync(projectIds?: string[]): Promise<IProjectDetails[]> {
+        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
         try {
-            const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
             pgClient.connect();
             let result: QueryResult;
             if (projectIds && projectIds.length > 0) {
@@ -102,21 +110,16 @@ export class ProjectModel {
             }
             return [];
         } catch (error) {
+            try {
+                await pgClient.end();
+            } finally { }
             throw error;
         }
     }
 }
-
-export interface IProjectRequest {
-    name: string;
-    start_date: Date;
-    end_date: Date;
-    completion_per: number;
-    created_by: string;
-    updated_by: string;
-}
-// "External_Id__c", "Name", "Description__c", "Start_Date__c", "End_Date__c", "Completion_Percentage__c", "Status__c",
-// "CreatedById", "LastModifiedById", "CreatedDate", "LastModifiedDate", "Project__c"
+/**
+ * Project type interface
+ */
 export interface IProjectDetails {
     Id?: string;
     External_Id__c?: string;
@@ -139,7 +142,9 @@ export interface IProjectDetails {
     // for Gannt
     records?: ITaskDetails[];
 }
-
+/**
+ * Task type interface
+ */
 export interface ITaskDetails extends IProjectDetails {
     Project__c: string;
 }

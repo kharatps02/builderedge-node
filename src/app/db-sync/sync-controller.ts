@@ -1,5 +1,5 @@
 import { ProjectSfModel } from './../project/project.sfmodel';
-import { ISFResponse, SFResponse } from "./sf-response";
+import { SFResponse } from "./sf-response";
 import { SyncDataModel } from "./sync.datamodel";
 import { IProjectDetails } from "./../project/project.model";
 import { ISseResponse, sse } from "@toverux/expresse";

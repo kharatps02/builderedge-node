@@ -7,13 +7,19 @@ export class AppError implements Error {
     }
 }
 export class ConnectionError extends AppError {
-    public readonly name: string = 'AppError';
+    public readonly name: string = 'ConnectionError';
     constructor(message: string, innerError?: Error) {
         super(message, innerError);
     }
 }
 export class OrgError extends AppError {
-    public readonly name: string = 'AppError';
+    public readonly name: string = 'OrgError';
+    constructor(message: string, innerError?: Error) {
+        super(message, innerError);
+    }
+}
+export class InvalidRequestError extends AppError {
+    public readonly name: string = 'InvalidRequestError';
     constructor(message: string, innerError?: Error) {
         super(message, innerError);
     }

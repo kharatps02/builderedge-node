@@ -12,30 +12,7 @@ export class AuthDataModel {
 
     }
     /**
-     * getAccessToken
-     */
-    public async getAccessToken(vanityKey: any): Promise<IOAuthToken> {
-        const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
-        try {
-            pgClient.connect();
-            const queryStr = "SELECT * FROM org_master WHERE vanity_id = $1";
-            const result = await pgClient.query(queryStr, [vanityKey]);
-            // if user is valid
-            if (result.rows.length > 0) {
-                const qRes = result.rows[0];
-                const orgConfig: OrgMaster = new OrgMaster(qRes);
-                // get access token from refresh token
-                const token = await this.getOAuthToken(orgConfig.getRefreshToken());
-                return token;
-            } else {
-                throw new OrgError("Not a valid org.");
-            }
-        } finally {
-            await utils.endClient(pgClient);
-        }
-    }
-    /**
-     *
+     *getAccessTokenByRefreshToken
      * @param decryptedRefreshToken
      */
     public async getAccessTokenByRefreshToken(decryptedRefreshToken: string): Promise<IOAuthToken> {

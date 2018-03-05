@@ -1,3 +1,4 @@
+import { OrgError } from './../utils/errors';
 import { ISFResponse, SFResponse } from './../app/db-sync/sf-response';
 import * as rp from 'request-promise';
 import * as jsforce from 'jsforce';
@@ -14,6 +15,7 @@ export class SFQueryService {
         this.orgMasterModel = new OrgMasterModel();
     }
     /**
+     * @description Gets a connection using the access token.
      * getConnectionWithToken
      */
     public getConnectionWithToken(instanceUrl: string, accessToken?: string, refreshToken?: string) {
@@ -29,7 +31,8 @@ export class SFQueryService {
         });
     }
     /**
-     * Gets connection object for specified org.
+     * IOrgMaster
+     * @description Gets connection object for specified org.
      * Pass either org id or vanity id.
      * @param orgId org Id 
      * @param vanityId vanity Id
@@ -38,12 +41,15 @@ export class SFQueryService {
         let orgConfig!: IOrgMaster;
         try {
             if (!(orgId || vanityId)) {
-                throw new AppError("Could not locate the org.");
+                throw new AppError("Invalid information about the salesforce org.");
             }
             if (orgId) {
                 orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
             } else if (vanityId) {
                 orgConfig = await this.orgMasterModel.getOrgConfigByVanityId(vanityId);
+            }
+            if (!orgConfig) {
+                throw new OrgError('Salesforce org not found.');
             }
             const conn = this.getConnectionWithToken(orgConfig.api_base_url, orgConfig.access_token, orgConfig.refresh_token);
             if (callback) {
@@ -59,7 +65,7 @@ export class SFQueryService {
     }
 
     /**
-     * Gets all data using HTTP request
+     * @description Gets all data using HTTP request
      * @param url URL with/without query string
      * @param accessToken
      * @param qs query string
@@ -100,7 +106,7 @@ export class SFQueryService {
     }
 
     /**
-     * Gets all data using HTTP request
+     * @description Gets all data using HTTP request
      * @param url URL with/without query string
      * @param accessToken
      * @param appendRecords records to append to the given object. This is useful for pagination based responses.

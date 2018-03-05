@@ -16,16 +16,10 @@ export class ProjectRoutes {
 
     get routes() {
         const router = express.Router();
-        // POC1
-        router.post('/api/project/update', this.authentication.ensureAuthorized, this.projectController.updateProjectOrTask.bind(this.projectController));
-        // router.post('/api/project/getalldetails', this.authentication.ensureAuthorized, this.projectController.getAllDetails.bind(this.projectController));
-        // TODO: change this name to get projects for gantt
-        router.get('/api/project/getalldetails', timeout('100000s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
-        router.post('/api/project/getalldetails', timeout('100000s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
-
-        // POC2
-        router.post('/api/external/project/update', this.authentication.ensureAuthorized, this.projectController.updateProjectPOC2.bind(this.projectController));
-        router.post('/api/external/task/update', this.authentication.ensureAuthorized, this.projectController.updateTaskPOC2.bind(this.projectController));
+        // Setting timeout to 1 hour for really huge data, especially for getalldata.
+        router.post('/api/project/update', timeout('300s'), this.authentication.ensureAuthorized, this.projectController.updateProjectOrTask.bind(this.projectController));
+        router.get('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
+        router.post('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
         return router;
     }
 }

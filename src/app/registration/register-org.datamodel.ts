@@ -1,5 +1,4 @@
 import { ConnectionError, OrgError } from './../../utils/errors';
-import { ServerResponse } from './../../core/server-response';
 import { Client } from "pg";
 import { Constants } from "../../config/constants";
 import { Enums } from "../../config/enums";
@@ -47,12 +46,16 @@ export class RegisterOrgDataModel {
                 return queryRes.rows[0];
             }
         } finally {
-            await utils.endClient(pgClient);
+            try {
+                await pgClient.end();
+            } finally { }
         }
 
     }
     /**
      * registeredSuccessfully
+     * @description Validates the registered org.
+     * @param vanityKey 
      */
     public async registeredSuccessfully(vanityKey: any): Promise<IOrgMaster> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
@@ -68,46 +71,9 @@ export class RegisterOrgDataModel {
                 throw new OrgError("Not a valid org.");
             }
         } finally {
-            await utils.endClient(pgClient);
+            try {
+                await pgClient.end();
+            } finally { }
         }
     }
-    // /**
-    //  * registerUserWithVanityText
-    //  */
-    // public async registerUserWithVanityText(orgId, customerName): Promise<ServerResponse> {
-    //     const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
-    //     try {
-    //         // await pgClient.connect((err) => { throw new ConnectionError('Could not connect to database', err); });
-    //         await utils.connectClient(pgClient);
-    //         const outerQueryStr = "SELECT user_id FROM CUSTOMER WHERE org_id = $1 limit 1";
-    //         const result = await pgClient.query(outerQueryStr, [orgId]);
-    //         if (result.rows.length === 0) {
-    //             throw AppError('No records found.');
-    //         } else {
-    //             // const queryStr = "UPDATE CUSTOMER SET VANITYURLTEXT = $1 WHERE orgID = $2";
-    //             // const queryStr = "UPDATE org_id SET VANITYURLTEXT = $1 WHERE orgID = $2";
-    //             // const updateResult = await pgClient.query(queryStr, [customerName, orgId]);
-    //             return ServerResponse.success('Updated successfully', customerName);
-    //         }
-    //     } finally {
-    //         await utils.endClient(pgClient);
-    //     }
-    // }
-    // public async isRegisteredUser(orgId): Promise<any> {
-    //     const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
-    //     try {
-    //         await utils.connectClient(pgClient);
-    //         // await pgClient.connect((err) => { throw new ConnectionError('Could not connect to database', err); });
-    //         const queryStr = "SELECT VANITYURLTEXT FROM CUSTOMER WHERE ORGID = $1";
-    //         const result = await pgClient.query(queryStr, [orgId]);
-    //         if (result.rows.length > 0) {
-    //             return { userRegistered: true, uniquekey: result.rows[0].vanityurltext };
-    //         } else {
-    //             return { userRegistered: false };
-    //         }
-    //     } finally {
-    //         await utils.endClient(pgClient);
-    //         // pgClient.end((err) => console.error('At End pgClient', err));
-    //     }
-    // }
 }

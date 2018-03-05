@@ -10,6 +10,7 @@ import { ProjectController } from '../project/project.controller';
 import { buildUpdateStatements, formatProjectDetails, formatTaskDetails, buildInsertStatements } from '../project/project.helper';
 import { PubService } from './pub-service';
 import { IOAuthToken } from '../../core/authentication/oauth-model';
+import { AppError } from '../../utils/errors';
 
 export class SubService {
     private authenticator: Authentication;
@@ -74,72 +75,77 @@ export class SubService {
             data = JSON.parse(data);
         }
         this.projectModel.getProjectExternalIdMap((projectMap) => {
-            if (data.Projects !== null) {
-                records = data.Projects;
-                records = records.map((self) => {
-                    // self = formatProjectDetails(self);
-                    if (payload.Action__c === 'update') {
-                        const externalId = self['External_Id__c'];
-                        self['External_Id__c'] = self['Id'];
-                        self['Id'] = externalId;
-                    }
-                    return self;
-                });
-            } else if (data.ProjectTasks !== null) {
-                records = data.ProjectTasks;
-                records = records.map((self) => {
-                    // self = formatTaskDetails(self);
-                    if (payload.Action__c === 'update') {
-                        const externalId = self['External_Id__c'];
-                        self['External_Id__c'] = self['Id'];
-                        self['Id'] = externalId;
-                    }
-                    self['Project__c'] = projectMap.find((p) => p.External_Id__c === self['Project__c']).Id;
-                    return self;
-                });
-                isProjectRequest = false;
-            }
 
-            if (records && records.length > 0) {
-                if (payload.Action__c === 'update') {
-                    const queryConfigArray: any[] = [];
-                    records.forEach((task) => {
-                        const queryConfig = buildUpdateStatements(task, isProjectRequest);
-                        queryConfigArray.push(queryConfig);
+            if (projectMap && projectMap.length > 0) {
+                if (data.Projects !== null) {
+                    records = data.Projects;
+                    records = records.map((self) => {
+                        // self = formatProjectDetails(self);
+                        if (payload.Action__c === 'update') {
+                            const externalId = self['External_Id__c'];
+                            self['External_Id__c'] = self['Id'];
+                            self['Id'] = externalId;
+                        }
+                        return self;
                     });
+                } else if (data.ProjectTasks !== null) {
+                    records = data.ProjectTasks;
+                    records = records.map((self) => {
+                        if (payload.Action__c === 'update') {
+                            const externalId = self['External_Id__c'];
+                            self['External_Id__c'] = self['Id'];
+                            self['Id'] = externalId;
+                        }
+                        const IdMap = projectMap.find((p) => p.External_Id__c === self['Project__c']);
+                        if (!IdMap) {
+                            throw new AppError(`Couldn't find project mapping in the database`);
+                        }
+                        self['Project__c'] = IdMap.Id;
+                        return self;
+                    });
+                    isProjectRequest = false;
+                }
 
-                    this.projectModel.updateProjectsOrTasks(queryConfigArray, (error, results) => {
-                        console.log(error, results);
-                        if (!error) {
+                if (records && records.length > 0) {
+                    if (payload.Action__c === 'update') {
+                        const queryConfigArray: any[] = [];
+                        records.forEach((task) => {
+                            const queryConfig = buildUpdateStatements(task, isProjectRequest);
+                            queryConfigArray.push(queryConfig);
+                        });
+
+                        this.projectModel.updateProjectsAndTasksAsync(queryConfigArray).then((result) => {
                             console.log("Updated to the database from Subscribe (SPE).");
-                        }
-                    });
-                } else {
-                    // Insert here
-                    const queryConfig = buildInsertStatements(records, ['"Id"', '"External_Id__c"'], isProjectRequest, internalOrg!.vanity_id);
+                        }).catch((err) => {
+                            console.log("Problem updating the database from SPE.", err);
+                        })
+                    } else {
+                        // Insert here
+                        const queryConfig = buildInsertStatements(records, ['"Id"', '"External_Id__c"'], isProjectRequest, internalOrg!.vanity_id);
 
-                    this.projectModel.insertManyStatements(queryConfig, (error, results) => {
-                        console.log(error, results);
-                        if (!error) {
-                            console.log("Inserted to the database from Subscribe (SPE).");
-                            if (results.rows && results.rows.length > 0) {
-                                const pubservice = new PubService();
-                                results.rows.forEach((r: any) => {
-                                    const id = r['Id'];
-                                    r['Id'] = r.External_Id__c;
-                                    r['External_Id__c'] = id;
-                                });
-                                let pubData = null;
-                                if (isProjectRequest) {
-                                    pubData = JSON.stringify({ Projects: results.rows });
-                                } else {
-                                    pubData = JSON.stringify({ ProjectTasks: results.rows });
+                        this.projectModel.insertManyStatements(queryConfig, (error, results) => {
+                            console.log(error, results);
+                            if (!error) {
+                                console.log("Inserted to the database from Subscribe (SPE).");
+                                if (results.rows && results.rows.length > 0) {
+                                    const pubservice = new PubService();
+                                    results.rows.forEach((r: any) => {
+                                        const id = r['Id'];
+                                        r['Id'] = r.External_Id__c;
+                                        r['External_Id__c'] = id;
+                                    });
+                                    let pubData = null;
+                                    if (isProjectRequest) {
+                                        pubData = JSON.stringify({ Projects: results.rows });
+                                    } else {
+                                        pubData = JSON.stringify({ ProjectTasks: results.rows });
+                                    }
+                                    pubservice.publishWithOrgId(orgId, pubData);
+                                    console.log("Published External ids to salesforce");
                                 }
-                                pubservice.publish(orgId, pubData);
-                                console.log("Published External ids to salesforce");
                             }
-                        }
-                    });
+                        });
+                    }
                 }
             }
         });
