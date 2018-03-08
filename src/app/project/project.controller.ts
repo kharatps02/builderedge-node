@@ -2,6 +2,8 @@
 import { IOrgMaster } from './../../core/models/org-master';
 import * as express from "express";
 import * as request from 'request';
+import * as path from 'path';
+import * as fs from 'fs';
 
 import { ProjectModel, IProjectDetails, ITaskDetails } from './project.model';
 import { OrgMasterModel } from '../org-master/org-master.model';
@@ -11,7 +13,7 @@ import { PubService } from "../db-sync/pub-service";
 import { forEach } from "async";
 import { Enums } from "../../config/enums";
 import { ProjectSfModel } from './project.sfmodel';
-import { AppError, InvalidRequestError } from '../../utils/errors';
+import { AppError, InvalidRequestError, UnauthorizedError } from '../../utils/errors';
 import { QueryConfig } from 'pg';
 /**
  * Handles the requests related to project object.
@@ -72,7 +74,72 @@ export class ProjectController {
             this.handleError(err, res);
         }
     }
+    /**
+     * getProtectedData
+     */
+    public async getProtectedData(req: express.Request, res: express.Response, next: express.NextFunction) {
 
+
+        try {
+            const path1 = path.join(__dirname, '../../../data')
+            const staticMiddlewarePrivate = express.static(path1);
+            let receivedProjectIds: string[] | string = req.query.p || req.body;
+            let projectIds: string[];
+            if (receivedProjectIds && typeof receivedProjectIds === 'string') {
+                projectIds = receivedProjectIds.split(',');
+            } else {
+                projectIds = receivedProjectIds as string[];
+            }
+
+            if (Constants.ALLOW_UNAUTHORIZED) {
+                console.log('**** Serving Protected Data Unauthorized ****');
+                for (const id of projectIds) {
+                    req.url = req.url.replace(/^\/api\/project\/data/, '');
+                    staticMiddlewarePrivate(req, res, next);
+                    // const file = path.join(path1, id);
+                    // res.type('application/zip').write(file);
+                }
+                return;
+            } else {
+                const orgId = req.headers['org-id'] as string;
+                const sessionId = req.headers['session-id'] as string;
+
+                if (!sessionId || !orgId) {
+                    throw new UnauthorizedError("Unauthorized request");
+                }
+                // Get org config based on the passed org id.
+                const orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
+                // Get authorized project ids first.
+                const authorizedProjectIds: string[] = await this.projectSfModel.getAuthorizedProjectIds(receivedProjectIds, orgConfig.api_base_url, sessionId);
+                let unauthorizedProjectIds: string[] = [];
+                if (projectIds) {
+                    unauthorizedProjectIds = projectIds.filter((v, i, a) => {
+                        return !(authorizedProjectIds.indexOf(v) > -1);
+                    });
+                }
+                // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
+
+                if (!authorizedProjectIds || authorizedProjectIds.length === 0) {
+                    throw new UnauthorizedError('You do not have any project authorized to you.');
+                }
+                console.log('**** Protected Data Authorized ****');
+                //res.setHeader('Content-Type', 'application/zip');
+                res.writeHead(200, { 'Content-Type': 'multipart/mixed' });
+                for (const id of authorizedProjectIds) {
+                    req.url = req.url.replace(/^\/api\/project\/data/, '');
+                    // const file = path.join(path1, id);
+                    // const readStream = fs.createReadStream(file);
+                    // We replaced all the event handlers with a simple call to readStream.pipe()
+                    // readStream.pipe(res);
+                    // res.type('application/zip').write(file);
+                    staticMiddlewarePrivate(req, res, next);
+                }
+            }
+            // res.end();
+        } catch (err) {
+            this.handleError(err, res);
+        }
+    }
     /**
      * updateProjectOrTask
      * @description Function to updates Projects or Tasks
@@ -159,6 +226,8 @@ export class ProjectController {
     private handleError(error: any, res: express.Response) {
         if (error instanceof InvalidRequestError) {
             res.status(400).send(error);
+        } else if (error instanceof UnauthorizedError) {
+            res.status(401).send(error);
         } else if (error instanceof AppError) {
             res.status(500).send(error);
         } else {

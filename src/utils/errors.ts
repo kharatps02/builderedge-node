@@ -6,6 +6,12 @@ export class AppError implements Error {
     constructor(public message: string, public innerError?: Error) {
     }
 }
+export class UnauthorizedError implements Error {
+    public readonly name: string = 'UnauthorizedError';
+    protected readonly status = Enums.RESPONSE_STATUS.ERROR;
+    constructor(public message: string, public innerError?: Error) {
+    }
+}
 export class ConnectionError extends AppError {
     public readonly name: string = 'ConnectionError';
     constructor(message: string, innerError?: Error) {

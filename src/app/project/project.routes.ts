@@ -20,6 +20,8 @@ export class ProjectRoutes {
         router.post('/api/project/update', timeout('300s'), this.authentication.ensureAuthorized, this.projectController.updateProjectOrTask.bind(this.projectController));
         router.get('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
         router.post('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
+        // router.get('/api/project/data/*/:file', timeout('3600s'), this.authentication.ensureAuthenticated, this.projectController.getProtectedData.bind(this.projectController));
+        router.get('/api/project/data', timeout('3600s'), this.authentication.ensureAuthenticated, this.projectController.getProtectedData.bind(this.projectController));
         return router;
     }
 }

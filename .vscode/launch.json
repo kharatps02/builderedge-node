@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "preLaunchTask": "grunt",
-            "restart": true,
+            "restart": false,
             "name": "Debug using node",
             "program": "${workspaceFolder}\\bin\\www",
             "outFiles": [

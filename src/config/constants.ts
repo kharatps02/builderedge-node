@@ -4,6 +4,8 @@ import { Enums } from "./enums";
  * @description Access the constants from this namespace.
  */
 export namespace Constants {
+    // TESTING PURPOSE ONLY!! allows unauthorized data by skipping auth check.
+    export const ALLOW_UNAUTHORIZED = process.env.ALLOW_UNAUTHORIZED || false;
     export const POSTGRES_DB_CONFIG = {
         // tslint:disable-next-line:max-line-length
         connectionString: process.env.DATABASE_URL || 'postgres://mzjseajwunmjbi:2add0b650f12012c219677ce95c13b36379f3d0df8f9f569cd15ba5623423f50@ec2-54-83-204-230.compute-1.amazonaws.com:5432/dei96aqio25l8r',
