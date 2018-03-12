@@ -63,7 +63,7 @@ export class Server {
     this.app.set('view engine', 'pug');
 
     this.app.use(express.static(path.join(__dirname, "public")));
-
+    // this.app.use(express.static(path.join(__dirname, "../data")));
     this.app.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');

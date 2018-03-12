@@ -15,6 +15,10 @@ export class Authentication {
     }
 
     public ensureAuthorized(req: express.Request, res: express.Response, next: express.NextFunction): void {
+        this.ensureAuthenticated(req, res, next);
+        next();
+    }
+    public ensureAuthenticated(req: express.Request, res: express.Response, next: express.NextFunction): void {
         next();
     }
     public authenticateAndRun(orgConfig: IHasToken, callback: (error: any, token?: IOAuthToken) => void): void {

@@ -2,6 +2,8 @@
 import { IOrgMaster } from './../../core/models/org-master';
 import * as express from "express";
 import * as request from 'request';
+import * as path from 'path';
+import * as fs from 'fs';
 
 import { ProjectModel, IProjectDetails, ITaskDetails } from './project.model';
 import { OrgMasterModel } from '../org-master/org-master.model';
@@ -11,7 +13,7 @@ import { PubService } from "../db-sync/pub-service";
 import { forEach } from "async";
 import { Enums } from "../../config/enums";
 import { ProjectSfModel } from './project.sfmodel';
-import { AppError, InvalidRequestError } from '../../utils/errors';
+import { AppError, InvalidRequestError, UnauthorizedError, NotFoundError } from '../../utils/errors';
 import { QueryConfig } from 'pg';
 /**
  * Handles the requests related to project object.
@@ -72,7 +74,62 @@ export class ProjectController {
             this.handleError(err, res);
         }
     }
+    /**
+     * getProtectedData
+     */
+    public async getProtectedData(req: express.Request, res: express.Response, next: express.NextFunction) {
+        try {
+            const path1 = path.join(__dirname, '../../../data')
+            const staticMiddlewarePrivate = express.static(path1);
+            let projectId: string = req.params.project;
+            if (!projectId || typeof projectId !== 'string') {
+                throw new InvalidRequestError('Invalid project id.')
+            }
 
+            if (Constants.ALLOW_UNAUTHORIZED) {
+                console.log('**** Serving Protected Data Unauthorized ****');
+                req.url = '/protected' + req.url.replace(/^\/api\/project\/data/, '') + '.zip';
+                staticMiddlewarePrivate(req, res, next);
+                return;
+            } else {
+                const orgId = req.headers['org-id'] as string;
+                const sessionId = req.headers['session-id'] as string;
+
+                if (!sessionId || !orgId) {
+                    throw new UnauthorizedError("Unauthorized request");
+                }
+                // Get org config based on the passed org id.
+                const orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
+                // Get authorized project ids first.
+                const authorizedProjectIds: string[] = await this.projectSfModel.getAuthorizedProjectIds(projectId, orgConfig.api_base_url, sessionId);
+                let unauthorizedProjectIds: string[] = [];
+                if (projectId) {
+                    unauthorizedProjectIds = [projectId].filter((v, i, a) => {
+                        return !(authorizedProjectIds.indexOf(v) > -1);
+                    });
+                }
+                // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
+
+                if (!authorizedProjectIds || authorizedProjectIds.length === 0) {
+                    throw new UnauthorizedError('You do not have any project authorized to you.');
+                }
+                // res.type('application/zip');
+                console.log('**** Protected Data Authorized ****');
+                req.url = '/protected/' + authorizedProjectIds[0] + '.zip';
+                staticMiddlewarePrivate(req, res, next);
+
+                //// Another way is directly use sendFile:
+                //const filePath = path.join(path1, '/protected/', authorizedProjectIds[0] + '.zip');
+                // if (fs.existsSync(filePath)) {
+                //     res.sendFile(filePath);
+                // } else {
+                //     throw new NotFoundError();
+                // }
+            }
+        } catch (err) {
+            this.handleError(err, res);
+        }
+    }
     /**
      * updateProjectOrTask
      * @description Function to updates Projects or Tasks
@@ -157,10 +214,8 @@ export class ProjectController {
      * @author Rushikesh K
      */
     private handleError(error: any, res: express.Response) {
-        if (error instanceof InvalidRequestError) {
-            res.status(400).send(error);
-        } else if (error instanceof AppError) {
-            res.status(500).send(error);
+        if (error instanceof AppError) {
+            res.status(error.getCode() || 500).send(error);
         } else {
             res.status(500).send({ status: Enums.RESPONSE_STATUS.ERROR, message: error ? error.message ? error.message : error : Constants.MESSAGES.SOMETHING_WENT_WRONG });
         }
