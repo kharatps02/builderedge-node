@@ -1,0 +1,24 @@
+extends layout
+
+block content
+  body
+    .container
+      .page-header
+        h1
+          | Test Page 
+          small BuilderEdge Test Page
+      .row
+        .col-md-12
+          .panel.panel-default
+            .panel-body
+                div.form-inline
+                    .form-group
+                        button#test.btn.btn-primary(type='button') Test
+    script(src='http://code.jquery.com/jquery-3.3.1.min.js')
+    //- script(src='/common/js/bootstrap.min.js')
+    script(src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js')
+
+    //- script(src='/common/js/jquery.validate.min.js')
+    script(src='https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js')
+    script(src='/jszip.js')
+    script(src='/test.js')

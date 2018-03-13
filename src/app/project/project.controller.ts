@@ -5,6 +5,7 @@ import * as request from 'request';
 import * as path from 'path';
 import * as fs from 'fs';
 
+
 import { ProjectModel, IProjectDetails, ITaskDetails } from './project.model';
 import { OrgMasterModel } from '../org-master/org-master.model';
 import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements, swapSfId } from './project.helper';
@@ -28,6 +29,12 @@ export class ProjectController {
         this.orgMasterModel = new OrgMasterModel();
         this.projectSfModel = new ProjectSfModel();
         this.pubService = new PubService();
+    }
+    /**
+     * testPage
+     */
+    public async testPage(req: express.Request, res: express.Response, next: express.NextFunction) {
+        res.render('test-page');
     }
     /**
      * getProjectsForGantt
@@ -88,8 +95,23 @@ export class ProjectController {
 
             if (Constants.ALLOW_UNAUTHORIZED) {
                 console.log('**** Serving Protected Data Unauthorized ****');
-                req.url = '/protected' + req.url.replace(/^\/api\/project\/data/, '') + '.zip';
-                staticMiddlewarePrivate(req, res, next);
+                // req.url = '/protected' + req.url.replace(/^\/api\/project\/data/, '') + '.zip';
+                // res.type('application/zip')
+                // staticMiddlewarePrivate(req, res, next);
+                const options = {
+                    headers: {
+                        // 'type': 'application/zip',
+                        // 'content-type': 'application/zip',
+                        'Content-Encoding': 'gzip'
+                    }
+                };
+                const filePath = path.join(path1, '/protected/', projectId + '.json');
+                if (fs.existsSync(filePath)) {
+                    // res.set('Content-Encoding', 'gzip');
+                    res.sendFile(filePath);
+                } else {
+                    throw new NotFoundError();
+                }
                 return;
             } else {
                 const orgId = req.headers['org-id'] as string;
