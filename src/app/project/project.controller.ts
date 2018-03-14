@@ -5,6 +5,7 @@ import * as request from 'request';
 import * as path from 'path';
 import * as fs from 'fs';
 
+
 import { ProjectModel, IProjectDetails, ITaskDetails } from './project.model';
 import { OrgMasterModel } from '../org-master/org-master.model';
 import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements, swapSfId } from './project.helper';
@@ -28,6 +29,12 @@ export class ProjectController {
         this.orgMasterModel = new OrgMasterModel();
         this.projectSfModel = new ProjectSfModel();
         this.pubService = new PubService();
+    }
+    /**
+     * testPage
+     */
+    public async testPage(req: express.Request, res: express.Response, next: express.NextFunction) {
+        res.render('test-page');
     }
     /**
      * getProjectsForGantt
@@ -74,10 +81,11 @@ export class ProjectController {
             this.handleError(err, res);
         }
     }
+
     /**
      * getProtectedData
      */
-    public async getProtectedData(req: express.Request, res: express.Response, next: express.NextFunction) {
+    public async getProtectedDataGZip(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const path1 = path.join(__dirname, '../../../data')
             const staticMiddlewarePrivate = express.static(path1);
@@ -88,8 +96,18 @@ export class ProjectController {
 
             if (Constants.ALLOW_UNAUTHORIZED) {
                 console.log('**** Serving Protected Data Unauthorized ****');
-                req.url = '/protected' + req.url.replace(/^\/api\/project\/data/, '') + '.zip';
-                staticMiddlewarePrivate(req, res, next);
+                //// Other way of downloading.
+                // req.url = '/protected' + req.url.replace(/^\/api\/project\/data/, '') + '.zip';
+                // res.type('application/zip')
+                // staticMiddlewarePrivate(req, res, next);
+
+                const filePath = path.join(path1, '/protected/', projectId + '.gz');
+                if (fs.existsSync(filePath)) {
+                    res.set('Content-Encoding', 'gzip');
+                    res.download(filePath, projectId);
+                } else {
+                    throw new NotFoundError();
+                }
                 return;
             } else {
                 const orgId = req.headers['org-id'] as string;
@@ -113,11 +131,17 @@ export class ProjectController {
                 if (!authorizedProjectIds || authorizedProjectIds.length === 0) {
                     throw new UnauthorizedError('You do not have any project authorized to you.');
                 }
-                // res.type('application/zip');
                 console.log('**** Protected Data Authorized ****');
-                req.url = '/protected/' + authorizedProjectIds[0] + '.zip';
-                staticMiddlewarePrivate(req, res, next);
-
+                // req.url = '/protected/' + authorizedProjectIds[0] + '.zip';
+                // staticMiddlewarePrivate(req, res, next);
+                const filePath = path.join(path1, '/protected/', projectId + '.gz');
+                if (fs.existsSync(filePath)) {
+                    // res.set('Content-Encoding', 'gzip');
+                    res.set('Content-Encoding', 'gzip');
+                    res.download(filePath, projectId);
+                } else {
+                    throw new NotFoundError();
+                }
                 //// Another way is directly use sendFile:
                 //const filePath = path.join(path1, '/protected/', authorizedProjectIds[0] + '.zip');
                 // if (fs.existsSync(filePath)) {
@@ -130,6 +154,7 @@ export class ProjectController {
             this.handleError(err, res);
         }
     }
+   
     /**
      * updateProjectOrTask
      * @description Function to updates Projects or Tasks
