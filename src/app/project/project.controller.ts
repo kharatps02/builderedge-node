@@ -81,10 +81,11 @@ export class ProjectController {
             this.handleError(err, res);
         }
     }
+
     /**
      * getProtectedData
      */
-    public async getProtectedData(req: express.Request, res: express.Response, next: express.NextFunction) {
+    public async getProtectedDataGZip(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const path1 = path.join(__dirname, '../../../data')
             const staticMiddlewarePrivate = express.static(path1);
@@ -95,20 +96,15 @@ export class ProjectController {
 
             if (Constants.ALLOW_UNAUTHORIZED) {
                 console.log('**** Serving Protected Data Unauthorized ****');
+                //// Other way of downloading.
                 // req.url = '/protected' + req.url.replace(/^\/api\/project\/data/, '') + '.zip';
                 // res.type('application/zip')
                 // staticMiddlewarePrivate(req, res, next);
-                const options = {
-                    headers: {
-                        // 'type': 'application/zip',
-                        // 'content-type': 'application/zip',
-                        'Content-Encoding': 'gzip'
-                    }
-                };
-                const filePath = path.join(path1, '/protected/', projectId + '.json');
+
+                const filePath = path.join(path1, '/protected/', projectId + '.gz');
                 if (fs.existsSync(filePath)) {
-                    // res.set('Content-Encoding', 'gzip');
-                    res.sendFile(filePath);
+                    res.set('Content-Encoding', 'gzip');
+                    res.download(filePath, projectId);
                 } else {
                     throw new NotFoundError();
                 }
@@ -135,11 +131,17 @@ export class ProjectController {
                 if (!authorizedProjectIds || authorizedProjectIds.length === 0) {
                     throw new UnauthorizedError('You do not have any project authorized to you.');
                 }
-                // res.type('application/zip');
                 console.log('**** Protected Data Authorized ****');
-                req.url = '/protected/' + authorizedProjectIds[0] + '.zip';
-                staticMiddlewarePrivate(req, res, next);
-
+                // req.url = '/protected/' + authorizedProjectIds[0] + '.zip';
+                // staticMiddlewarePrivate(req, res, next);
+                const filePath = path.join(path1, '/protected/', projectId + '.gz');
+                if (fs.existsSync(filePath)) {
+                    // res.set('Content-Encoding', 'gzip');
+                    res.set('Content-Encoding', 'gzip');
+                    res.download(filePath, projectId);
+                } else {
+                    throw new NotFoundError();
+                }
                 //// Another way is directly use sendFile:
                 //const filePath = path.join(path1, '/protected/', authorizedProjectIds[0] + '.zip');
                 // if (fs.existsSync(filePath)) {
@@ -152,6 +154,7 @@ export class ProjectController {
             this.handleError(err, res);
         }
     }
+   
     /**
      * updateProjectOrTask
      * @description Function to updates Projects or Tasks

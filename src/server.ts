@@ -4,7 +4,7 @@ import * as express from "express";
 import * as cookieParser from "cookie-parser";
 import * as logger from "morgan";
 import * as path from "path";
-
+import * as responseTime from 'response-time';
 import { BaseRoutes } from './config/routes/base.routes';
 import { SyncController } from "./app/db-sync/sync-controller";
 
@@ -56,6 +56,7 @@ export class Server {
    */
   public config() {
     this.app.use(cookieParser());
+    this.app.use(responseTime());
     this.app.engine('pug', require('pug').__express);
     // add static paths
     // configure pug

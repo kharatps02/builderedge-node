@@ -21,7 +21,7 @@ export class ProjectRoutes {
         router.get('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
         router.post('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
         // router.get('/api/project/data/*/:file', timeout('3600s'), this.authentication.ensureAuthenticated, this.projectController.getProtectedData.bind(this.projectController));
-        router.get('/api/project/data/:project', timeout('3600s'), compression({ threshold: 9 }), this.authentication.ensureAuthenticated, this.projectController.getProtectedData.bind(this.projectController));
+        router.get('/api/project/data/:project', timeout('3600s'), this.authentication.ensureAuthenticated, this.projectController.getProtectedDataGZip.bind(this.projectController));
         router.get('/project/test-zip', timeout('3600s'), this.authentication.ensureAuthenticated, this.projectController.testPage.bind(this.projectController));
         return router;
     }
