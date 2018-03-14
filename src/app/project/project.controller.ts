@@ -96,15 +96,11 @@ export class ProjectController {
 
             if (Constants.ALLOW_UNAUTHORIZED) {
                 console.log('**** Serving Protected Data Unauthorized ****');
-                //// Other way of downloading.
-                // req.url = '/protected' + req.url.replace(/^\/api\/project\/data/, '') + '.zip';
-                // res.type('application/zip')
-                // staticMiddlewarePrivate(req, res, next);
-
-                const filePath = path.join(path1, '/protected/', projectId + '.gz');
+                const filePath = path.join(path1, '/protected/', projectId + '.json');
                 if (fs.existsSync(filePath)) {
-                    res.set('Content-Encoding', 'gzip');
-                    res.download(filePath, projectId);
+                    // res.set('Content-Encoding', 'gzip');
+                    // res.download(filePath, projectId);
+                    res.sendFile(filePath);
                 } else {
                     throw new NotFoundError();
                 }
@@ -132,29 +128,21 @@ export class ProjectController {
                     throw new UnauthorizedError('You do not have any project authorized to you.');
                 }
                 console.log('**** Protected Data Authorized ****');
-                // req.url = '/protected/' + authorizedProjectIds[0] + '.zip';
-                // staticMiddlewarePrivate(req, res, next);
-                const filePath = path.join(path1, '/protected/', projectId + '.gz');
+                const filePath = path.join(path1, '/protected/', projectId + '.json');
                 if (fs.existsSync(filePath)) {
                     // res.set('Content-Encoding', 'gzip');
-                    res.set('Content-Encoding', 'gzip');
-                    res.download(filePath, projectId);
+                    // res.download(filePath, projectId);
+                    res.sendFile(filePath);
                 } else {
                     throw new NotFoundError();
                 }
-                //// Another way is directly use sendFile:
-                //const filePath = path.join(path1, '/protected/', authorizedProjectIds[0] + '.zip');
-                // if (fs.existsSync(filePath)) {
-                //     res.sendFile(filePath);
-                // } else {
-                //     throw new NotFoundError();
-                // }
+
             }
         } catch (err) {
             this.handleError(err, res);
         }
     }
-   
+
     /**
      * updateProjectOrTask
      * @description Function to updates Projects or Tasks
