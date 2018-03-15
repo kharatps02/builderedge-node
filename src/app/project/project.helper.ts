@@ -27,7 +27,7 @@ export function formatProjectAndTaskDetails(projectArray: any[]) {
 /**
  * formatTaskDetails
  * @description Formats task details for gantt.
- * @param task 
+ * @param task
  */
 export function formatTaskDetails(task: { [key: string]: any }) {
     const newTask = task;
@@ -39,7 +39,7 @@ export function formatTaskDetails(task: { [key: string]: any }) {
 /**
  * formatProjectDetails
  * @description Formats project details for gantt
- * @param project 
+ * @param project
  */
 export function formatProjectDetails(project: { [key: string]: any, series: any[] }) {
     const newProject = project;

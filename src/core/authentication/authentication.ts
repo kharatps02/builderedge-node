@@ -31,7 +31,7 @@ export class Authentication {
                         }
                         return token;
                     }
-                })
+                });
             }
         } catch (err) {
             if (callback) {

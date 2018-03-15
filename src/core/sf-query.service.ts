@@ -34,7 +34,7 @@ export class SFQueryService {
      * IOrgMaster
      * @description Gets connection object for specified org.
      * Pass either org id or vanity id.
-     * @param orgId org Id 
+     * @param orgId org Id
      * @param vanityId vanity Id
      */
     public async getConnectionAsIntegUser(orgId?: string, vanityId?: string, callback?: (err?: Error, connection?: jsforce.Connection) => void): Promise<jsforce.Connection> {

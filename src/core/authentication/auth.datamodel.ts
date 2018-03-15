@@ -12,7 +12,7 @@ export class AuthDataModel {
 
     }
     /**
-     *getAccessTokenByRefreshToken
+     * getAccessTokenByRefreshToken
      * @param decryptedRefreshToken
      */
     public async getAccessTokenByRefreshToken(decryptedRefreshToken: string): Promise<IOAuthToken> {
@@ -32,7 +32,7 @@ export class AuthDataModel {
             json: true,
         };
         // console.log('In getOAuthToken - ', requestObj);
-        const token = await rp.post(requestObj)
+        const token = await rp.post(requestObj);
         const parsed = token as IOAuthToken;
         return parsed;
     }

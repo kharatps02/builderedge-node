@@ -21,7 +21,10 @@ export class SyncDataModel {
      * @param params
      * @param salesforceResponseArray
      */
-    public async syncSalesforceUserDetails(params: { vanity_id: string, session_id: string }, salesforceResponseArray: any[], callback?: (done: boolean, error?: any) => void): Promise<boolean> {
+    public async syncSalesforceUserDetails(
+        params: { vanity_id: string, session_id: string },
+        salesforceResponseArray: any[],
+        callback?: (done: boolean, error?: any) => void): Promise<boolean> {
 
         try {
             const projectRecords = JSON.parse(JSON.stringify(salesforceResponseArray));
@@ -84,7 +87,7 @@ export class SyncDataModel {
                     // call salesforce endpoints to update postgres id into salesforce database
                     if (salesforceRequestObj.Projects && salesforceRequestObj.Projects.length > 0) {
                         if (params.session_id) {
-                            this.pubService.publishWithVanityId(params.vanity_id, JSON.stringify(salesforceRequestObj))
+                            this.pubService.publishWithVanityId(params.vanity_id, JSON.stringify(salesforceRequestObj));
                             if (callback) {
                                 callback(true);
                             }

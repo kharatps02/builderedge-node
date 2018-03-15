@@ -13,13 +13,13 @@ export class RegisterOrgDataModel {
         this.auth = new Authentication();
     }
     /**
-     * #### oAuthCallback
-     * Inserts/updates the org details to org_master along with Oauth details.
-     * @param orgId 
-     * @param refreshToken 
-     * @param instanceUrl 
-     * @param grantedUserId 
-     * @param accessToken 
+     * oAuthCallback
+     * @description Inserts/updates the org details to org_master along with Oauth details.
+     * @param orgId Salesforce Org Id.
+     * @param refreshToken Refresh token for the Integ User.
+     * @param instanceUrl Instance URL for the org.
+     * @param grantedUserId Granted User Id for the Integ User.
+     * @param accessToken Access token for the Integ User.
      */
     public async registerOrg(orgId: string, refreshToken: string, instanceUrl: string, grantedUserId: string, accessToken: string): Promise<IOrgMaster> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);
@@ -55,7 +55,7 @@ export class RegisterOrgDataModel {
     /**
      * registeredSuccessfully
      * @description Validates the registered org.
-     * @param vanityKey 
+     * @param vanityKey Vanity Key
      */
     public async registeredSuccessfully(vanityKey: any): Promise<IOrgMaster> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);

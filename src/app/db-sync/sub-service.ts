@@ -28,7 +28,9 @@ export class SubService {
     }
 
     /**
+     * config
      * @description Subscribes the event at the salesforce side and performs actions based on the event triggerred.
+     * @param orgConfig Org Configuration from the database.
      */
     public config(orgConfig: IOrgMaster) {
         this.authenticator.authenticateAndRun(orgConfig, (error: any, token?: IOAuthToken) => {
@@ -62,7 +64,11 @@ export class SubService {
             });
         });
     }
-
+    /**
+     * updateDB
+     * @description Updates database from the data received from salesforce.
+     * @param payload payload to update Database.
+     */
     private async updateDB(payload: any) {
         const temp = true;
         let isProjectRequest = true;
@@ -118,7 +124,7 @@ export class SubService {
                             console.log("Updated to the database from Subscribe (SPE).");
                         }).catch((err) => {
                             console.log("Problem updating the database from SPE.", err);
-                        })
+                        });
                     } else {
                         // Insert here
                         const queryConfig = buildInsertStatements(records, ['"Id"', '"External_Id__c"'], isProjectRequest, internalOrg!.vanity_id);

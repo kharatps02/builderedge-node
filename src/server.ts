@@ -58,7 +58,11 @@ export class Server {
   public config() {
     this.app.use(cookieParser());
     this.app.use(responseTime());
+    // The compression middleware/library will by default use GZip, it internally uses 'Zlib' library for Gzip compression.
+    // All responses served from this server will use gzip compression by default.
+    // No special configuration required apart from the following ones, except if needed.
     this.app.use(compression({threshold: 0}));
+
     this.app.engine('pug', require('pug').__express);
     // add static paths
     // configure pug
@@ -70,7 +74,7 @@ export class Server {
     this.app.use((req, res, next) => {
       res.header("Access-Control-Allow-Origin", "*");
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-      res.setHeader('Access-Control-Allow-Headers', '*');// 'X-Requested-With,content-type, Authorization, session-id, org-id, Accept-Encoding, Content-Encoding');
+      res.setHeader('Access-Control-Allow-Headers', '*'); // 'X-Requested-With,content-type, Authorization, session-id, org-id, Accept-Encoding, Content-Encoding');
       next();
     });
     // mount logger

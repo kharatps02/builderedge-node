@@ -14,8 +14,8 @@ export class RegisterOrgController {
     }
     /**
      * Fallback landing page for registration. Will by default consider the Org to be Non-sandbox org.
-     * @param request 
-     * @param response 
+     * @param request  Express.js request
+     * @param response Express.js response
      */
     public registerIndex(request: express.Request, response: express.Response) {
         const origin = request.query.origin;
@@ -25,8 +25,8 @@ export class RegisterOrgController {
     }
     /**
      * The landing page for Org registration.
-     * @param request 
-     * @param response 
+     * @param request  Express.js request
+     * @param response Express.js response
      */
     public register(request: express.Request, response: express.Response) {
         let isSandBoxUser = request.params.isSandBoxUser;
@@ -42,8 +42,8 @@ export class RegisterOrgController {
     /**
      * authorizeUser
      * @description Identifies org type and sends the authentication request to salesforce.
-     * @param request 
-     * @param response 
+     * @param request  Express.js request
+     * @param response Express.js response
      */
     public authorizeUser(request: express.Request, response: express.Response) {
         const isSandBoxUser = request.query.isSandBoxUser;
@@ -76,9 +76,9 @@ export class RegisterOrgController {
     /**
      * oAuthCallback
      * @description Handles OAuth response from salesforce and generates the desired tokens.
-     * @param request 
-     * @param response 
-     * @param next 
+     * @param request  Express.js request
+     * @param response Express.js response
+     * @param next Express.js next function
      */
     public async oAuthCallback(request: express.Request, response: express.Response, next: express.NextFunction) {
         const conn = new jsforce.Connection({ oauth2: request.cookies.oauth2 });
@@ -109,9 +109,9 @@ export class RegisterOrgController {
     /**
      * registeredSuccessfully
      * @description Registration successful handler. This tells the user that the org is registered and s/he can do initial sync by going next.
-     * @param request 
-     * @param response 
-     * @param next 
+     * @param request  Express.js request
+     * @param response Express.js response
+     * @param next Express.js next function
      */
     public async registeredSuccessfully(request: express.Request, response: express.Response, next: express.NextFunction) {
         const vanityKey = request.params.vanityKey;
