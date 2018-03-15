@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { ISseResponse, sse } from '@toverux/expresse';
+import { sse } from '@toverux/expresse';
 import { SyncController } from './sync-controller';
 import * as timeout from "connect-timeout";
 /**
@@ -13,11 +13,10 @@ export class SyncRoutes {
 
     get routes() {
         const router = express.Router();
-        // POC1
-        router.get('/sync', this.syncController.index.bind(this.syncController));
+        // POC3: SEE for the initial sync after successful registration.
         router.get('/events', sse({ flushAfterWrite: true }), this.syncController.events.bind(this.syncController));
+        // POC3: Initial sync after successful registration.
         router.post('/sync/initial/:vanityKey', timeout('100000s'), this.syncController.syncDataInitial.bind(this.syncController));
-
         return router;
     }
 }

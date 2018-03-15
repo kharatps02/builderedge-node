@@ -17,7 +17,6 @@ export class ProjectSfModel {
     /**
      * Gets project ids of the projects that user is authorized to access.
      * Accepts project ids to validate user access.
-     * 
      * @param receviedProjectIds array of project ids
      * @param baseUrl base url/instance url
      * @param accessToken access token. Required if
@@ -25,7 +24,7 @@ export class ProjectSfModel {
      */
     public async getAuthorizedProjectIds(receviedProjectIds: string[] | string, baseUrl: string, accessToken?: string, refreshToken?: string): Promise<string[]> {
         if (!(accessToken || refreshToken)) {
-            throw 'User could not be authentication. Please pass authentication information.';
+            throw new Error('User could not be authentication. Please pass authentication information.');
         }
         const conn = new jsforce.Connection({
             oauth2: {
@@ -55,9 +54,10 @@ export class ProjectSfModel {
     /**
      * getAllProjectsAndTasks
      * @description Gets all projects and tasks. Also handles the nextRecord URL to fetch all records (if records>2000)
-     * @param accessToken 
-     * @param vanityKey 
-     * @param orgId 
+     * Provide either vanity key or org id.
+     * @param accessToken Access token or session Id
+     * @param vanityKey Vanity Key of org
+     * @param orgId Salesforce Org Id
      */
     public async getAllProjectsAndTasks(
         accessToken: string,
@@ -75,7 +75,7 @@ export class ProjectSfModel {
                     orgId
                 );
             } else {
-                throw new AppError('Please provide vanity id or org id');
+                throw new AppError('Please provide either vanity id or org id');
             }
             let sfResponsePerRequest: ISFResponse<IProjectDetails> = new SFResponse<
                 IProjectDetails

@@ -5,7 +5,7 @@ import { Enums } from "./enums";
  */
 export namespace Constants {
     // TESTING PURPOSE ONLY!! allows unauthorized data by skipping auth check.
-    export const ALLOW_UNAUTHORIZED = (process.env.ALLOW_UNAUTHORIZED == 'true') || false;
+    export const ALLOW_UNAUTHORIZED = (process.env.ALLOW_UNAUTHORIZED === 'true') || false;
     export const POSTGRES_DB_CONFIG = {
         // tslint:disable-next-line:max-line-length
         connectionString: process.env.DATABASE_URL || 'postgres://mzjseajwunmjbi:2add0b650f12012c219677ce95c13b36379f3d0df8f9f569cd15ba5623423f50@ec2-54-83-204-230.compute-1.amazonaws.com:5432/dei96aqio25l8r',
@@ -28,7 +28,7 @@ export namespace Constants {
         export const UPDATED = 'Data updated successfully';
         export const SOMETHING_WENT_WRONG = 'something went wrong';
         export const INVALID_REQUEST_PARAMS = 'Invalid request params';
-    };
+    }
 
     export const COMETD = {
         LOG_MODE: process.env.COMETD_LOG_MODE || Enums.COMETD_LOG_MODES.ERROR,

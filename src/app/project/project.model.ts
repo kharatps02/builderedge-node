@@ -92,7 +92,7 @@ export class ProjectModel {
      * getAllProjectsAsync
      * @description Gets all projects by project Ids. Returns a JSON formatted object from the database itself.
      * For performance reasons the JSON transform is at PostgreSQL side. It can also be done in Node.js easily. MongoDB will give a right json out of the box.
-     * @param projectIds 
+     * @param projectIds Project ids from salesforce.
      */
     public async getAllProjectsAsync(projectIds?: string[]): Promise<IProjectDetails[]> {
         const pgClient = new Client(Constants.POSTGRES_DB_CONFIG);

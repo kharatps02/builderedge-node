@@ -15,6 +15,7 @@ import { EventEmitter } from "events";
 import { IOrgMaster } from "../../core/models/org-master";
 
 /**
+ * SyncController
  * @description It gets all orgs and its integration user OAuth Token to be used for the subscription.
  */
 export class SyncController {
@@ -41,13 +42,17 @@ export class SyncController {
   }
   /**
    * events
+   * @description Send events to the page to indicate status of sync process.
+   * @param req Express.js request
+   * @param res ISseResponse that extends Express.js response
+   * @param next Express.js next function
+
    */
   public events(
     req: express.Request,
     res: ISseResponse,
     next: express.NextFunction
   ) {
-
     res.sse.event('hello', 'hello');
     this.eventBus.addListener(
       "sendEvent",
@@ -57,6 +62,7 @@ export class SyncController {
     );
   }
   /**
+   * init
    * @description Initializes the SubService instances for all the registered orgs.
    */
   public init() {
@@ -71,6 +77,8 @@ export class SyncController {
   }
   /**
    * addNewOrgToSubscribers
+   * @description Adds newly registered org to Platform Events subscriptions list.
+   * @param vanityId vanityId of the org.
    */
   public addNewOrgToSubscribers(vanityId: string) {
     this.orgMasterModel.getOrgConfigByVanityId(vanityId, (error, config) => {
@@ -80,6 +88,7 @@ export class SyncController {
     });
   }
   /**
+   * getInstance
    * @description Retrives the specific instance of SubService when needed.
    * @param id OrgId
    */
@@ -89,6 +98,14 @@ export class SyncController {
     }
   }
 
+  /**
+   * syncDataInitial
+   * @description handler function for initial data sync.
+   * @param req Express.js request
+   * @param res Express.js response
+   * @param next Express.js next function
+
+   */
   public async syncDataInitial(
     req: express.Request,
     res: express.Response,
@@ -98,7 +115,10 @@ export class SyncController {
     const vanityKey = req.params.vanityKey;
     const appUrl = req.body.appUrl;
     try {
-      res.render("data-sync", { appUrl })
+      // Render the data sync page and initiate sync.
+      res.render("data-sync", { appUrl }, (error, html) => {
+        res.render("error", { appUrl, error });
+      });
       const projects = await this.projectSfModel.getAllProjectsAndTasks(
         accessToken,
         vanityKey,
@@ -110,38 +130,22 @@ export class SyncController {
       const done = await this.syncDataModel.syncSalesforceUserDetails({ vanity_id: vanityKey, session_id: accessToken }, formatedProjects);
 
       if (done) {
-        // res.render("data-sync", { appUrl });
+        // Send SSE message.
         setTimeout(() => {
           this.eventBus.emit("orgSynched", { appUrl, vanityKey });
         }, 5000);
 
       } else {
-        // res.render("data-sync", { appUrl });
+
         setTimeout(() => {
           this.eventBus.emit("error", formatedProjects);
         }, 5000);
-        // reject('sync failed');
 
-        // res.render('data-sync', { appUrl });
-        //     res.render('data-sync', { appUrl }, (err, html) => {
-        //     console.log(err, html);
-        //     this.eventBus.emit('sendEvent', { event: 'initialSyncDone', data: { error: 'There was a problem synching your data.' } });
-        //     return;
-        // });
       }
-      // res.render("data-sync", { appUrl });
     } catch (err) {
-      res.render("error", { appUrl, err });
-      return;
+      setTimeout(() => {
+        this.eventBus.emit("error", err || 'There was a problem synching your data.');
+      }, 5000);
     }
   }
-
-  /**
-   * syncInitial
-   */
-  public index(
-    request: express.Request,
-    response: express.Response,
-    next: express.NextFunction
-  ) { }
 }

@@ -5,7 +5,6 @@ import * as request from 'request';
 import * as path from 'path';
 import * as fs from 'fs';
 
-
 import { ProjectModel, IProjectDetails, ITaskDetails } from './project.model';
 import { OrgMasterModel } from '../org-master/org-master.model';
 import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements, swapSfId } from './project.helper';
@@ -16,6 +15,7 @@ import { Enums } from "../../config/enums";
 import { ProjectSfModel } from './project.sfmodel';
 import { AppError, InvalidRequestError, UnauthorizedError, NotFoundError } from '../../utils/errors';
 import { QueryConfig } from 'pg';
+
 /**
  * Handles the requests related to project object.
  */
@@ -42,16 +42,16 @@ export class ProjectController {
      * Get Projects and tasks to be used with the Gantt.
      * Gets projects for the given project ids if user is authorized to access them.
      * If no project ids are passed, it gets all projects the user is authorized to access.
-     * @param req expressjs request
-     * @param res expressjs response
-     * @param next expressjs next function
-     * @author Rushikesh K
+     * @param req Express.js request
+     * @param res Express.js response
+     * @param next Express.js next function
+
      */
     public async getProjectsForGantt(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
             const sessionId = req.headers['session-id'] as string;
             const orgId = req.headers['org-id'] as string;
-            let receivedProjectIds: string[] | string = req.query.p || req.body;
+            const receivedProjectIds: string[] | string = req.query.p || req.body;
             let projectIds: string[];
             if (receivedProjectIds && typeof receivedProjectIds === 'string') {
                 projectIds = receivedProjectIds.split(',');
@@ -59,7 +59,7 @@ export class ProjectController {
                 projectIds = receivedProjectIds as string[];
             }
             if (!sessionId || !orgId) {
-                throw "Unauthorized request";
+                throw new UnauthorizedError("Unauthorized request");
             }
             // Get org config based on the passed org id.
             const orgConfig = await this.orgMasterModel.getOrgConfigByOrgIdAsync(orgId);
@@ -74,7 +74,7 @@ export class ProjectController {
             // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
             const data = await this.projectModel.getAllProjectsAsync(authorizedProjectIds);
             if (!data || data.length === 0) {
-                throw new AppError('You do not have any project authorized to you.')
+                throw new AppError('You do not have any project authorized to you.');
             }
             res.send({ status: Enums.RESPONSE_STATUS.SUCCESS, message: '', projects: data, error: { unauthorized: unauthorizedProjectIds } });
         } catch (err) {
@@ -84,28 +84,31 @@ export class ProjectController {
 
     /**
      * getProtectedData
+     * @description Gets tasks for given project id. Supports Gzipped response to the client.
+     * @param req Express.js request
+     * @param res Express.js response
+     * @param next Express.js next function
+
      */
     public async getProtectedDataGZip(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
-            const path1 = path.join(__dirname, '../../../data')
-            const staticMiddlewarePrivate = express.static(path1);
-            let projectId: string = req.params.project;
+            const path1 = path.join(__dirname, '../../../data');
+            const projectId: string = req.params.project;
             if (!projectId || typeof projectId !== 'string') {
-                throw new InvalidRequestError('Invalid project id.')
+                throw new InvalidRequestError('Invalid project id.');
             }
 
             if (Constants.ALLOW_UNAUTHORIZED) {
                 console.log('**** Serving Protected Data Unauthorized ****');
                 const filePath = path.join(path1, '/protected/', projectId + '.json');
                 if (fs.existsSync(filePath)) {
-                    // res.set('Content-Encoding', 'gzip');
-                    // res.download(filePath, projectId);
                     res.sendFile(filePath);
                 } else {
                     throw new NotFoundError();
                 }
                 return;
             } else {
+                // Check if user is authorized to access this project and this org.
                 const orgId = req.headers['org-id'] as string;
                 const sessionId = req.headers['session-id'] as string;
 
@@ -122,21 +125,17 @@ export class ProjectController {
                         return !(authorizedProjectIds.indexOf(v) > -1);
                     });
                 }
-                // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
-
                 if (!authorizedProjectIds || authorizedProjectIds.length === 0) {
                     throw new UnauthorizedError('You do not have any project authorized to you.');
                 }
+                // Get the projects and tasks formatted for Gantt by passing the authorized project ids for the current user.
                 console.log('**** Protected Data Authorized ****');
                 const filePath = path.join(path1, '/protected/', projectId + '.json');
                 if (fs.existsSync(filePath)) {
-                    // res.set('Content-Encoding', 'gzip');
-                    // res.download(filePath, projectId);
                     res.sendFile(filePath);
                 } else {
                     throw new NotFoundError();
                 }
-
             }
         } catch (err) {
             this.handleError(err, res);
@@ -146,13 +145,13 @@ export class ProjectController {
     /**
      * updateProjectOrTask
      * @description Function to updates Projects or Tasks
-     * @param req With org id and session id (optional) in headers or body. 
-     * #### e.g. 
+     * @param req With org id and session id (optional) in headers or body.
+     * #### e.g.
      * - In Headers:    `{'org-id':'<Salesforce-Org-Id>', 'session-id':'<Some-session-id-here>'}`
      * OR
      * - In Body:   `{org_id:'<Salesforce-Org-Id>', session_id:'<Some-session-id-here>'}`
      * @param res
-     * @author Rushikesh K
+
      */
     public async updateProjectOrTask(req: express.Request, res: express.Response) {
         try {
@@ -224,7 +223,7 @@ export class ProjectController {
      * @description Handles error responses.
      * @param error Error
      * @param res Express response object
-     * @author Rushikesh K
+
      */
     private handleError(error: any, res: express.Response) {
         if (error instanceof AppError) {
