@@ -45,7 +45,6 @@ export class ProjectController {
      * @param req Express.js request
      * @param res Express.js response
      * @param next Express.js next function
-
      */
     public async getProjectsForGantt(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
@@ -88,7 +87,6 @@ export class ProjectController {
      * @param req Express.js request
      * @param res Express.js response
      * @param next Express.js next function
-
      */
     public async getProtectedDataGZip(req: express.Request, res: express.Response, next: express.NextFunction) {
         try {
@@ -151,7 +149,6 @@ export class ProjectController {
      * OR
      * - In Body:   `{org_id:'<Salesforce-Org-Id>', session_id:'<Some-session-id-here>'}`
      * @param res
-
      */
     public async updateProjectOrTask(req: express.Request, res: express.Response) {
         try {
@@ -223,7 +220,6 @@ export class ProjectController {
      * @description Handles error responses.
      * @param error Error
      * @param res Express response object
-
      */
     private handleError(error: any, res: express.Response) {
         if (error instanceof AppError) {

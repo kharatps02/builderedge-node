@@ -46,7 +46,6 @@ export class SyncController {
    * @param req Express.js request
    * @param res ISseResponse that extends Express.js response
    * @param next Express.js next function
-
    */
   public events(
     req: express.Request,
@@ -104,7 +103,6 @@ export class SyncController {
    * @param req Express.js request
    * @param res Express.js response
    * @param next Express.js next function
-
    */
   public async syncDataInitial(
     req: express.Request,
