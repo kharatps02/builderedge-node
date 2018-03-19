@@ -10,7 +10,6 @@ import { OrgMasterModel } from '../org-master/org-master.model';
 import { formatProjectAndTaskDetails, buildInsertStatements, buildUpdateStatements, swapSfId } from './project.helper';
 import { Constants } from '../../config/constants';
 import { PubService } from "../db-sync/pub-service";
-import { forEach } from "async";
 import { Enums } from "../../config/enums";
 import { ProjectSfModel } from './project.sfmodel';
 import { AppError, InvalidRequestError, UnauthorizedError, NotFoundError } from '../../utils/errors';
