@@ -2,7 +2,6 @@ import { ISFEntity } from './../../core/models/sf-entity';
 import { SFResponse } from './../db-sync/sf-response';
 import { Client, QueryResult, QueryConfig } from 'pg';
 import { error } from 'util';
-import * as async from 'async';
 
 import { Constants } from '../../config/constants';
 import { buildUpdateStatements } from './project.helper';
