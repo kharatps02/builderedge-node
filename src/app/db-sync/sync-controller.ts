@@ -114,9 +114,7 @@ export class SyncController {
     const appUrl = req.body.appUrl;
     try {
       // Render the data sync page and initiate sync.
-      res.render("data-sync", { appUrl }, (error, html) => {
-        res.render("error", { appUrl, error });
-      });
+      res.render("data-sync", { appUrl });
       const projects = await this.projectSfModel.getAllProjectsAndTasks(
         accessToken,
         vanityKey,
@@ -130,13 +128,13 @@ export class SyncController {
       if (done) {
         // Send SSE message.
         setTimeout(() => {
-          this.eventBus.emit("orgSynched", { appUrl, vanityKey });
+          // this.eventBus.emit("orgSynched", { appUrl, vanityKey });
         }, 5000);
 
       } else {
 
         setTimeout(() => {
-          this.eventBus.emit("error", formatedProjects);
+          // this.eventBus.emit("error", formatedProjects);
         }, 5000);
 
       }
