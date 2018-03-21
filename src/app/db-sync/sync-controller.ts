@@ -128,13 +128,13 @@ export class SyncController {
       if (done) {
         // Send SSE message.
         setTimeout(() => {
-          // this.eventBus.emit("orgSynched", { appUrl, vanityKey });
+          this.eventBus.emit("orgSynched", { appUrl, vanityKey });
         }, 5000);
 
       } else {
 
         setTimeout(() => {
-          // this.eventBus.emit("error", formatedProjects);
+          this.eventBus.emit("error", formatedProjects);
         }, 5000);
 
       }
