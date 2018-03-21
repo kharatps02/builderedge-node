@@ -18,12 +18,15 @@ export class ProjectRoutes {
         const router = express.Router();
         // Setting timeout to 1 hour for really huge data, especially for getalldata.
         // POC: Update data in database and Salesforce from VF page or 3rd party client.
-        router.post('/api/project/update', timeout('300s'), this.authentication.ensureAuthorized, this.projectController.updateProjectOrTask.bind(this.projectController));
+        router.post('/api/project/update', timeout('300s'), this.authentication.ensureAuthenticated,
+            this.projectController.updateProjectOrTask.bind(this.projectController));
 
         // POC: Get all details for Gantt Chart. GET request.
-        router.get('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
+        router.get('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthenticated,
+            this.projectController.getProjectsForGantt.bind(this.projectController));
         // POC: Get all details for Gantt Chart. POST request.
-        router.post('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthorized, this.projectController.getProjectsForGantt.bind(this.projectController));
+        router.post('/api/project/getalldetails', timeout('3600s'), this.authentication.ensureAuthenticated,
+            this.projectController.getProjectsForGantt.bind(this.projectController));
 
         // CR: Serve GZipped data from static JSON files.
         router.get('/api/project/data/:project', timeout('3600s'), this.authentication.ensureAuthenticated,
