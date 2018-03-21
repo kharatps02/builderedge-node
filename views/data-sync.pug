@@ -36,8 +36,7 @@ block content
                     .form-group
                 h3  Please wait while we sync the initial data. You will automatically be redirected to Salesforce once the sync is complete.
                 h3  DO NOT REFRESH THE PAGE.
-
-                p   loading...
+                img(src='/loader.gif', alt= 'loading...')
                 p   Depending on the data, it may take longer. If you think there is an error please see the console by pressing F12 and contact support with the details.
                     input#appUrl.form-control(type='hidden', name='appUrl' value=appUrl)
                     //- button.btn.btn-primary.submitbtn(type='submit') Done!
