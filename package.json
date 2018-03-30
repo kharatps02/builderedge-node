@@ -3,7 +3,8 @@
   "description": "builderedge poc",
   "version": "1.0.0",
   "private": true,
-  "author": "",
+  "author": "Extentia Information Technology",
+  "license": "MIT",
   "scripts": {
     "grunt": "grunt",
     "start": "node ./bin/www",
